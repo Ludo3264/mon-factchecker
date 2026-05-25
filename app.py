@@ -10,20 +10,19 @@ from langchain_core.output_parsers import StrOutputParser
 # ==============================================================================
 TRUSTED_SITES = [
     "site:factuel.afp.com", "site:lemonde.fr/les-decodeurs", "site:liberation.fr/checknews",
-    "site:francetvinfo.fr/vrai-ou-fake"
+    "site:francetvinfo.fr/vrai-ou-fake", "site:factcheck.org", "site:fullfact.org",
+    "site:snopes.com", "site:reuters.com/fact-check", "site:euvsdisinfo.eu"
 ]
 
 def search_trusted_sources(claim: str) -> str:
     search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-    # Recherche ciblée sur les sites de confiance avec des mots-clés de pertinence
-    query = f"{claim} site:liberation.fr OR site:lemonde.fr OR site:afp.com"
+    query = f'"{claim}" (site:liberation.fr OR site:lemonde.fr OR site:afp.com)'
     results = search.results(query)
     
     formatted = []
-    # Filtrage manuel : on ne garde que les sources parlant de la personne
     for res in results.get("organic", [])[:3]:
         titre = res.get('title', '').lower()
-        if "attal" in titre or "homosexuel" in titre:
+        if "attal" in titre or "homosexuel" in titre or "premier ministre" in titre:
             formatted.append(f"Source: {res.get('title')} | URL: {res.get('link')}\nExtrait: {res.get('snippet')}")
     
     return "\n\n".join(formatted) if formatted else "Aucune source pertinente trouvée."
@@ -40,17 +39,10 @@ with tab1:
     user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
     if st.button("Lancer l'analyse textuelle"):
         sources = search_trusted_sources(user_claim)
-        
-        # Le template force désormais une analyse factuelle basée sur le consensus médiatique
         template = """Tu es un expert en fact-checking. 
-        
-        RÈGLES :
-        1. VERDICT : Affiche VRAI, FAUX ou NUANCÉ en premier.
-        2. ANALYSE : Pour les personnalités politiques, traite les informations biographiques notoires (ex: homosexualité) comme des faits publics établis si elles sont reconnues par les médias de référence. Ne traite pas cela comme une "hypothèse".
-        3. TRAÇABILITÉ : Liste les sources utilisées avec leurs URLs.
-        
-        SOURCES FOURNIES : {context}
-        AFFIRMATION À VÉRIFIER : {claim}"""
+        RÈGLES : 1. VERDICT (VRAI, FAUX, NUANCÉ). 2. ANALYSE (Faits établis). 3. TRAÇABILITÉ (URLs).
+        SOURCES : {context}
+        AFFIRMATION : {claim}"""
         
         llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
         chain = PromptTemplate.from_template(template) | llm | StrOutputParser()
@@ -59,7 +51,7 @@ with tab1:
         st.markdown("### ⚖️ Résultat")
         st.write(resultat)
         st.markdown("---")
-        st.markdown("### 🔗 Sources utilisées")
+        st.markdown("### 🔗 Sources")
         st.write(sources)
 
 with tab2:
