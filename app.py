@@ -5,12 +5,21 @@ from datetime import datetime
 # --- CONFIGURATION DES SOURCES ---
 SOURCES = {
     "Fact-checking": {"AFP Factuel": "https://factuel.afp.com/?query=", "Le Monde Décodeurs": "https://www.lemonde.fr/les-decodeurs/recherche/?search_keywords="},
+    "Médias, Réseaux Sociaux & Culture": {
+        "Arcom (Régulation)": "https://www.arcom.fr/recherche?q=", 
+        "Le Monde Culture": "https://www.lemonde.fr/culture/recherche/?search_keywords="
+    },
     "Sport": {"Le Monde Sport": "https://www.lemonde.fr/sport/recherche/?search_keywords=", "L'Équipe": "https://www.lequipe.fr/recherche/?q="},
-    "Planète (Climat/Météo)": {"Le Monde Planète": "https://www.lemonde.fr/planete/recherche/?search_keywords=", "Météo-France": "https://meteofrance.com/recherche?q=", "Keraunos": "https://www.keraunos.org/recherche.html?searchword="},
-    "Politique": {"Le Monde Politique": "https://www.lemonde.fr/politique/recherche/?search_keywords=", "Vie Publique": "https://www.vie-publique.fr/recherche?q="},
-    "Sciences & Santé": {"Le Monde Sciences": "https://www.lemonde.fr/sciences/recherche/?search_keywords=", "INSERM": "https://www.inserm.fr/recherche/?q=", "OMS": "https://www.who.int/fr/search?q="},
-    "Économie": {"Le Monde Éco": "https://www.lemonde.fr/economie/recherche/?search_keywords=", "INSEE": "https://www.insee.fr/fr/recherche?q="},
-    "Société": {"Le Monde Société": "https://www.lemonde.fr/societe/recherche/?search_keywords=", "Défenseur Droits": "https://www.defenseurdesdroits.fr/fr/recherche?key="},
+    "Environnement & Planète": {"Le Monde Planète": "https://www.lemonde.fr/planete/recherche/?search_keywords=", "Météo-France": "https://meteofrance.com/recherche?q="},
+    "Société, Laïcité & Genre": {
+        "Vie Publique (Laïcité)": "https://www.vie-publique.fr/recherche?q=laïcité",
+        "HCE (Genre/Égalité)": "https://www.haut-conseil-egalite.gouv.fr/spip.php?page=recherche&recherche=",
+        "Défenseur des Droits": "https://www.defenseurdesdroits.fr/fr/recherche?key="
+    },
+    "Santé": {"Le Monde Sciences": "https://www.lemonde.fr/sciences/recherche/?search_keywords=", "INSERM": "https://www.inserm.fr/recherche/?q=", "OMS": "https://www.who.int/fr/search?q="},
+    "Éducation & École": {"Le Monde Éducation": "https://www.lemonde.fr/education/recherche/?search_keywords=", "Ministère Ed.": "https://www.education.gouv.fr/recherche?q="},
+    "Politique & Institutions": {"Le Monde Politique": "https://www.lemonde.fr/politique/recherche/?search_keywords=", "Vie Publique": "https://www.vie-publique.fr/recherche?q="},
+    "Économie & Emploi": {"Le Monde Éco": "https://www.lemonde.fr/economie/recherche/?search_keywords=", "INSEE": "https://www.insee.fr/fr/recherche?q="},
     "International": {"Le Monde International": "https://www.lemonde.fr/international/recherche/?search_keywords=", "ONU Info": "https://news.un.org/fr/search/"}
 }
 
@@ -21,7 +30,7 @@ def get_expert_analysis(query):
     
     system_prompt = f"""
     Nous sommes le {current_date}. Tu es un expert EMI agissant comme un journaliste des 'Décodeurs'.
-    RÈGLE : Utilise une approche rigoureuse. Recherche des preuves factuelles. 
+    RÈGLE : Utilise une approche rigoureuse. Recherche des preuves factuelles et institutionnelles.
     Si tu confirmes une info, cite l'article source. Si c'est une rumeur, démontre pourquoi en citant des preuves.
     
     Structure OBLIGATOIRE :
@@ -45,7 +54,6 @@ tab1, tab2, tab3 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une 
 
 with tab1:
     st.subheader("✍️ Analyseur Critique")
-    # Choix manuel pour garantir l'accès aux bons outils
     cat_selection = st.selectbox("Sélectionnez le domaine de votre recherche :", list(SOURCES.keys()))
     user_input = st.text_input("Saisissez l'affirmation à vérifier :")
 
@@ -76,6 +84,7 @@ with tab1:
 
 with tab2:
     st.subheader("🖼️ Vérifier une Image")
+    st.write("Utilisez ces outils pour effectuer une recherche inversée :")
     c1, c2, c3 = st.columns(3)
     c1.link_button("Google Lens", "https://lens.google.com/")
     c2.link_button("TinEye", "https://tineye.com/")
@@ -85,6 +94,7 @@ with tab3:
     st.subheader("ℹ️ Méthode : Le Doute Méthodique")
     st.markdown("""
     * **Croisez** : Utilisez les rubriques spécialisées pour vérifier les faits.
-    * **Identifiez** : Une information sourcée par des institutions (INSEE, Météo-France) est plus robuste.
+    * **Identifiez** : Une information sourcée par des institutions (INSEE, Météo-France, HCE, etc.) est plus robuste.
     * **L'IA est un assistant** : Si elle répond 'Incertain', c'est à vous de mener l'enquête manuellement via les boutons proposés.
+    * **Réseaux sociaux** : Soyez doublement vigilants, c'est le terrain privilégié de la désinformation.
     """)
