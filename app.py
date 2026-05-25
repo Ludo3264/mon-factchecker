@@ -2,27 +2,25 @@ import streamlit as st
 from groq import Groq
 
 # --- CONFIGURATION ---
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-
-# Liens de recherche
+# Liens mis à jour pour une meilleure fiabilité
 SEARCH_URLS = {
-    "AFP Factuel": "https://factuel.afp.com/search?query=",
-    "Le Monde": "https://www.lemonde.fr/recherche/?search_keywords=",
-    "Libération": "https://www.liberation.fr/recherche/?q=",
-    "France Info": "https://www.francetvinfo.fr/recherche/?search="
+    "AFP Factuel": "https://factuel.afp.com/?query=",
+    "Le Monde (Décodeurs)": "https://www.lemonde.fr/recherche/?search_keywords=",
+    "Libération (CheckNews)": "https://www.liberation.fr/recherche/?q=",
+    "France Info (Vrai ou Fake)": "https://www.francetvinfo.fr/recherche/?search="
 }
 
+# --- LOGIQUE IA ---
 def get_expert_analysis(query):
-    # Prompt renforcé pour éviter les erreurs factuelles grossières
+    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     system_prompt = """
     Tu es un expert en fact-checking EMI. 
-    1. Analyse l'affirmation avec une précision absolue.
-    2. Ne génère aucune information factuelle fausse (ex: ne pas inventer de titres, de fonctions ou de dates erronées).
-    3. Si tu as un doute, admets-le plutôt que d'inventer.
-    4. Structure ta réponse en : 
-       - Faits observés : (Preuves vérifiables sur Brigitte Macron).
-       - Biais détectés : (Analyse critique de la rumeur).
-       - Méthodologie : (Comment l'élève doit vérifier par lui-même).
+    1. Analyse l'affirmation avec une rigueur journalistique.
+    2. Ne génère aucune information factuelle erronée (dates, titres, fonctions).
+    3. Structure ta réponse en 3 parties obligatoires :
+       - Faits observés (données biographiques ou factuelles vérifiables).
+       - Biais détectés (analyse de la nature de la rumeur).
+       - Méthodologie de vérification (conseils concrets pour l'élève).
     """
     completion = client.chat.completions.create(
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": query}],
@@ -39,18 +37,19 @@ tab1, tab2, tab3 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une 
 with tab1:
     st.subheader("✍️ Analyseur Critique — Niveau Expert")
     
-    # Gestion des états
-    if 'user_input' not in st.session_state: st.session_state.user_input = ""
+    # Initialisation des états
     if 'analysis' not in st.session_state: st.session_state.analysis = None
     if 'show_verdict' not in st.session_state: st.session_state.show_verdict = False
+    if 'user_input' not in st.session_state: st.session_state.user_input = ""
 
     user_input = st.text_input("Affirmation à disséquer :")
     
     if st.button("Lancer l'enquête"):
-        st.session_state.user_input = user_input
-        st.session_state.analysis = get_expert_analysis(user_input)
-        st.session_state.show_verdict = False # On cache le verdict
-
+        if user_input:
+            st.session_state.user_input = user_input
+            st.session_state.analysis = get_expert_analysis(user_input)
+            st.session_state.show_verdict = False
+    
     if st.session_state.analysis:
         st.markdown("### 🔍 1. Enquêtez par vous-même")
         cols = st.columns(len(SEARCH_URLS))
@@ -59,12 +58,15 @@ with tab1:
             
         st.markdown("---")
         st.subheader("📝 2. Bilan de ma recherche")
-        user_bilan = st.text_area("Rédigez votre conclusion après avoir consulté les sources :")
+        user_bilan = st.text_area("Rédigez votre conclusion après avoir consulté les sources :", key="bilan_area")
         
         if st.button("Comparer mon bilan avec l'analyse experte"):
-            st.session_state.show_verdict = True
+            if user_bilan:
+                st.session_state.show_verdict = True
+            else:
+                st.warning("Veuillez rédiger votre bilan avant de comparer.")
 
-        if st.session_state.show_verdict and user_bilan:
+        if st.session_state.show_verdict:
             st.markdown("---")
             col1, col2 = st.columns(2)
             with col1:
@@ -73,16 +75,16 @@ with tab1:
             with col2:
                 st.subheader("🤖 Analyse de l'expert (IA)")
                 st.write(st.session_state.analysis)
-        elif st.session_state.show_verdict:
-            st.warning("Veuillez d'abord rédiger votre bilan.")
 
-# Onglets 2 et 3 inchangés...
+# (Onglets 2 et 3 inchangés)
 with tab2:
     st.subheader("🖼️ Vérifier une Image")
+    st.write("Utilisez ces outils pour effectuer une recherche inversée :")
     col1, col2, col3 = st.columns(3)
     col1.link_button("Google Lens", "https://lens.google.com/")
     col2.link_button("TinEye", "https://tineye.com/")
     col3.link_button("Bing Visual Search", "https://www.bing.com/visualsearch/")
+
 with tab3:
     st.subheader("ℹ️ Méthode : La règle du doute méthodique")
-    st.write("Le doute est un hommage rendu à la vérité.")
+    st.write("Le doute est un hommage rendu à la vérité. Croisez, vérifiez, ne partagez pas sans preuve.")
