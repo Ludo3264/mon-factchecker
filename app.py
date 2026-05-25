@@ -7,16 +7,21 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
 # ==============================================================================
-# CONFIGURATION DES SOURCES (Modifiable facilement ici)
+# CONFIGURATION DES SOURCES (Optimisée France & International / Max 32 mots Google)
 # ==============================================================================
-# Si vous voulez ajouter ou enlever un site de fact-checking, modifiez simplement cette liste :
 TRUSTED_SITES = [
-    "site:afp.com/fr/infos/fact-checking",
-    "site:lemonde.fr/les-decodeurs",
-    "site:liberation.fr/checknews",
-    "site:20minutes.fr/fact-checking",
-    "site:francetvinfo.fr/vrai-ou-fake",
-    "site:factuel.afp.com"
+    # --- FRANCE (Les piliers certifiés) ---
+    "site:factuel.afp.com",              # AFP Factuel (International & France)
+    "site:lemonde.fr/les-decodeurs",     # Les Décodeurs (Le Monde)
+    "site:liberation.fr/checknews",      # CheckNews (Libération)
+    "site:francetvinfo.fr/vrai-ou-fake", # Vrai ou Fake (France Info)
+    
+    # --- EUROPE & INTERNATIONAL (Bases de données globales) ---
+    "site:factcheck.org",                # Référence mondiale indépendante
+    "site:fullfact.org",                 # Référence Europe / UK
+    "site:snopes.com",                   # Le plus grand site mondial historique
+    "site:reuters.com/fact-check",       # Reuters Fact Check (Monde entier)
+    "site:euvsdisinfo.eu"                # Base officielle de l'Union Européenne contre la désinformation
 ]
 search_query_restriction = " OR ".join(TRUSTED_SITES)
 
@@ -38,7 +43,8 @@ RÈGLES CRITIQUES :
 1. Si les extraits de presse ne permettent pas de prouver si l'info est vraie ou fausse, réponds EXACTEMENT : 
    "Je ne trouve aucune vérification de cette information dans les sources officielles de fact-checking."
 2. Interdiction d'utiliser tes propres connaissances si les extraits n'en parlent pas.
-3. Si la réponse y est, commence par le verdict (VRAI, FAUX, ou NUANCÉ) et cite le média (ex: AFP, Les Décodeurs).
+3. Si la réponse y est, commence par le verdict (VRAI, FAUX, ou NUANCÉ) et cite le média source (ex: AFP, Reuters, Snopes).
+4. Traduis ou résume en français si la source trouvée est en anglais.
 
 ---
 EXTRAITS DE PRESSE SÉLECTIONNÉS :
@@ -68,20 +74,20 @@ def executer_fact_checking(claim: str, context_sources: str) -> str:
 # ==============================================================================
 # INTERFACE UTILISATEUR
 # ==============================================================================
-st.set_page_config(page_title="Fact-Checking Cloud", page_icon="🛡️", layout="centered")
+st.set_page_config(page_title="Fact-Checking Global", page_icon="🛡️", layout="centered")
 
-st.markdown('<p style="font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;">🛡️ Outil de Fact-Checking Automatisé</p>', unsafe_allow_html=True)
-st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Version Cloud (Propulsée par Groq & Llama 3.1)</p>', unsafe_allow_html=True)
+st.markdown('<p style="font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;">🛡️ Outil de Fact-Checking Global</p>', unsafe_allow_html=True)
+st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Version Réseau International (Propulsée par Groq & Llama 3.1)</p>', unsafe_allow_html=True)
 
-user_claim = st.text_area("Saisissez l'affirmation à vérifier :", placeholder="Exemple : Le gouvernement a annoncé...", height=100)
+user_claim = st.text_area("Saisissez l'affirmation à vérifier :", placeholder="Exemple : Une rumeur internationale dit que...", height=100)
 
 if st.button("Lancer la vérification", type="primary"):
     if not user_claim.strip():
         st.warning("⚠️ Saisissez du texte avant de lancer.")
     else:
-        with st.spinner("🔍 Recherche sur les sites certifiés..."):
+        with st.spinner("🔍 Recherche sur le réseau international..."):
             sources_text = search_trusted_sources(user_claim)
-        with st.spinner("🤖 Analyse critique par l'IA..."):
+        with st.spinner("🤖 Analyse critique multilingue par l'IA..."):
             resultat_verdict = executer_fact_checking(user_claim, sources_text)
             
         st.markdown('<p style="font-size:1.3rem; font-weight:bold; margin-top:20px;">⚖️ Analyse et conclusions :</p>', unsafe_allow_html=True)
@@ -90,5 +96,5 @@ if st.button("Lancer la vérification", type="primary"):
         else:
             st.success(resultat_verdict)
             
-        with st.expander("🔗 Consulter les extraits de presse bruts"):
+        with st.expander("🔗 Consulter les extraits de presse bruts (Monde)"):
             st.write(sources_text)
