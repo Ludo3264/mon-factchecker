@@ -75,12 +75,12 @@ def executer_fact_checking(claim: str, context_sources: str) -> str:
 st.set_page_config(page_title="Fact-Checking Global", page_icon="🛡️", layout="centered")
 
 st.markdown('<p style="font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;">🛡️ Outil de Fact-Checking Global & EMI</p>', unsafe_allow_html=True)
-st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Version Réseau International & Laboratoires Visuels (Propulsée par Groq & Llama 3.1)</p>', unsafe_allow_html=True)
+st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Version spécialisée (Texte & Image)</p>', unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs([
-    "✍️ Vérifier un Texte (Moteur IA d'origine)", 
-    "🖼️ Vérifier une Image (Recherche Inversée)",
-    "📹 Vérifier une Vidéo (Analyse Visuelle)"
+# Nous n'avons plus que 2 onglets
+tab1, tab2 = st.tabs([
+    "✍️ Vérifier un Texte", 
+    "🖼️ Vérifier une Image (Recherche Inversée)"
 ])
 
 # ONGLET 1
@@ -104,8 +104,8 @@ with tab1:
 
 # ONGLET 2
 with tab2:
-    st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Traquer l\'origine d\'une image ou d\'une photo</p>', unsafe_allow_html=True)
-    image_url = st.text_input("Collez l'URL de l'image (clic droit -> 'Copier le lien de l'image') :", placeholder="https://exemple.com/image.jpg", key="url_mode")
+    st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Traquer l\'origine d\'une image</p>', unsafe_allow_html=True)
+    image_url = st.text_input("Collez l'URL de l'image :", placeholder="https://exemple.com/image.jpg", key="url_mode")
     if image_url:
         try:
             st.image(image_url, caption="Image soumise via URL", width=300)
@@ -121,20 +121,3 @@ with tab2:
     col_up1, col_up2 = st.columns(2)
     with col_up1: st.link_button("📸 Uploader sur Google Lens officiel", "https://lens.google.com", use_container_width=True)
     with col_up2: st.link_button("🤖 Uploader sur TinEye officiel", "https://tineye.com", use_container_width=True)
-
-# ONGLET 3
-with tab3:
-    st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Enquêter sur une vidéo suspecte</p>', unsafe_allow_html=True)
-    st.write("**Objectif pédagogique :** Analyser les vidéos détournées ou manipulées.")
-    col_vid1, col_vid2 = st.columns(2)
-    with col_vid1:
-        st.link_button("📥 Installer l'extension InVID (Debunker)", "https://chromewebstore.google.com/detail/fake-news-debunker-invid/mhccpoafgdgbhnjfhkcmgknndkeenfhe?hl=fr", type="primary", use_container_width=True)
-    with col_vid2:
-        st.link_button("🛠️ Vidéo Verification Sandbox (Académique)", "https://reveal-mklab.iti.gr/reveal/", use_container_width=True)
-    st.markdown("""
-    ---
-    ### 💡 Guide d'animation :
-    1. **InVID :** Utilisez l'extension pour extraire les images clés d'une vidéo.
-    2. **Analyse Technique :** La *Vidéo Verification Sandbox* permet d'analyser les méta-données et tester la cohérence visuelle.
-    3. **Vérification Inversée :** Uploadez les images extraites dans l'**Onglet 2** pour voir si elles ont été détournées.
-    """)
