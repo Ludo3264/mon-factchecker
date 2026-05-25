@@ -1,4 +1,3 @@
-import os
 import streamlit as st
 import urllib.parse
 from langchain_groq import ChatGroq
@@ -31,30 +30,39 @@ def search_trusted_sources(claim: str) -> str:
         return f"Erreur : {str(e)}"
 
 # ==============================================================================
-# TEMPLATE RIGUEUR FACTUELLE (Zéro ambiguïté)
+# TEMPLATE RIGUEUR FACTUELLE
 # ==============================================================================
-template = """Tu es un expert en fact-checking. Ta mission est d'établir la vérité factuelle sur l'affirmation.
+template = """Tu es un expert en fact-checking. Ta mission est d'établir la vérité factuelle.
 
 RÈGLES D'OR :
-1. VÉRITÉ FACTUELLE : Un fait documenté par des sources fiables (ex: orientation sexuelle, fonctions publiques) est une VÉRITÉ ÉTABLIE. Ne jamais le qualifier de "discutable" ou "nuancé" s'il est prouvé.
+1. VÉRITÉ FACTUELLE : Un fait documenté par les sources fournies est une VÉRITÉ ÉTABLIE. Ne jamais le qualifier de "discutable" ou "nuancé".
 2. ANALYSE :
-   - FAITS ÉTABLIS : Liste uniquement les faits prouvés par les sources.
-   - DÉBATS & OPINIONS : Analyse uniquement ce qui relève du commentaire ou de la polémique, en le distinguant clairement des faits.
-   - VERDICT : VRAI, FAUX ou NUANCÉ (basé sur la preuve).
-   - SOURCE & TITRE : Cite précisément les médias et titres présents dans les extraits.
-3. Ne jamais inventer ou douter des faits prouvés par les sources.
+   - FAITS ÉTABLIS : Liste uniquement les faits prouvés en citant la source correspondante sous la forme.
+   - DÉBATS & OPINIONS : Analyse les commentaires politiques sans les confondre avec des faits.
+   - VERDICT : VRAI, FAUX ou NUANCÉ.
+3. CITATIONS : Utilise impérativement le format en te basant sur les sources numérotées ci-dessous.
 
 ---
-EXTRAITS : {context}
+EXTRAITS SOURCES :
+{context}
 ---
-AFFIRMATION : {claim}
+AFFIRMATION À VÉRIFIER :
+{claim}
+
 RÉPONSE :"""
 
 def executer_fact_checking(claim: str, context_sources: str) -> str:
+    # Nettoyage et structuration des sources pour forcer la citation précise
+    sources_liste = context_sources.split("...") 
+    sources_structurees = "\n".join([f"Source {i+1}: {s.strip()}" for i, s in enumerate(sources_liste) if len(s) > 10])
+    
     llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
-    chain = ({"context": RunnablePassthrough(), "claim": RunnablePassthrough()} 
-             | PromptTemplate.from_template(template) | llm | StrOutputParser())
-    return chain.invoke({"context": context_sources, "claim": claim})
+    prompt = PromptTemplate.from_template(template)
+    
+    chain = ({"context": lambda x: sources_structurees, "claim": lambda x: claim} 
+             | prompt | llm | StrOutputParser())
+    
+    return chain.invoke({"context": sources_structurees, "claim": claim})
 
 # ==============================================================================
 # INTERFACE
@@ -65,9 +73,11 @@ st.title("🛡️ Outil de Fact-Checking (Rigueur Absolue)")
 user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
 if st.button("Lancer l'analyse factuelle"):
     with st.spinner("Analyse en cours..."):
-        sources = search_trusted_sources(user_claim)
-        resultat = executer_fact_checking(user_claim, sources)
+        sources_brutes = search_trusted_sources(user_claim)
+        resultat = executer_fact_checking(user_claim, sources_brutes)
+        
         st.markdown("### ⚖️ Verdict et Analyse")
         st.write(resultat)
-        with st.expander("🔗 Voir les sources brutes"):
-            st.write(sources)
+        
+        with st.expander("🔗 Voir les sources brutes (pour vérification)"):
+            st.write(sources_brutes)
