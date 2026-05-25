@@ -15,7 +15,8 @@ TRUSTED_SITES = [
     "site:lemonde.fr/les-decodeurs",
     "site:liberation.fr/checknews",
     "site:20minutes.fr/fact-checking",
-    "site:francetvinfo.fr/vrai-ou-fake"
+    "site:francetvinfo.fr/vrai-ou-fake",
+    "site:factuel.afp.com"
 ]
 search_query_restriction = " OR ".join(TRUSTED_SITES)
 
