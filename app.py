@@ -8,7 +8,7 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
 # ==============================================================================
-# CONFIGURATION DES SOURCES (Un site par ligne)
+# CONFIGURATION
 # ==============================================================================
 TRUSTED_SITES = [
     "site:factuel.afp.com",
@@ -31,19 +31,18 @@ def search_trusted_sources(claim: str) -> str:
         return f"Erreur : {str(e)}"
 
 # ==============================================================================
-# TEMPLATE D'ANALYSE (Rigueur maximale)
+# TEMPLATE RIGUEUR FACTUELLE (Zéro ambiguïté)
 # ==============================================================================
-template = """Tu es un expert en éducation aux médias (EMI). Analyse l'affirmation et les extraits fournis.
+template = """Tu es un expert en fact-checking. Ta mission est d'établir la vérité factuelle sur l'affirmation.
 
-RÈGLES D'ANALYSE PRIORITAIRES :
-1. VÉRITÉ FACTUELLE : Un fait largement documenté (ex: orientation sexuelle, fonctions officielles) DOIT être classé comme FAIT ÉTABLI et ne jamais être remis en cause.
-2. VERDICT : VRAI / FAUX / NUANCÉ. Le verdict doit refléter la véracité du fait principal.
-3. STRUCTURE DE RÉPONSE :
-   - FAITS ÉTABLIS : Liste les points factuels indiscutables.
-   - ANALYSE DES INTERPRÉTATIONS/DÉBATS : Identifie les opinions, polémiques ou rumeurs. Explique pourquoi ce ne sont pas des faits.
-   - MÉCANISMES DE MANIPULATION : Détecte biais ou rumeurs uniquement sur les points polémiques.
-   - SOURCE & TITRE : Cite précisément les sources et les titres.
-4. Ne jamais utiliser de connaissances externes.
+RÈGLES D'OR :
+1. VÉRITÉ FACTUELLE : Un fait documenté par des sources fiables (ex: orientation sexuelle, fonctions publiques) est une VÉRITÉ ÉTABLIE. Ne jamais le qualifier de "discutable" ou "nuancé" s'il est prouvé.
+2. ANALYSE :
+   - FAITS ÉTABLIS : Liste uniquement les faits prouvés par les sources.
+   - DÉBATS & OPINIONS : Analyse uniquement ce qui relève du commentaire ou de la polémique, en le distinguant clairement des faits.
+   - VERDICT : VRAI, FAUX ou NUANCÉ (basé sur la preuve).
+   - SOURCE & TITRE : Cite précisément les médias et titres présents dans les extraits.
+3. Ne jamais inventer ou douter des faits prouvés par les sources.
 
 ---
 EXTRAITS : {context}
@@ -60,26 +59,15 @@ def executer_fact_checking(claim: str, context_sources: str) -> str:
 # ==============================================================================
 # INTERFACE
 # ==============================================================================
-st.set_page_config(page_title="Fact-Checking EMI", page_icon="🛡️")
-st.title("🛡️ Outil d'Analyse Critique (EMI)")
+st.set_page_config(page_title="Fact-Checking Rigoureux", page_icon="🛡️")
+st.title("🛡️ Outil de Fact-Checking (Rigueur Absolue)")
 
-tab1, tab2 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une Image"])
-
-with tab1:
-    user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
-    if st.button("Lancer l'analyse"):
+user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
+if st.button("Lancer l'analyse factuelle"):
+    with st.spinner("Analyse en cours..."):
         sources = search_trusted_sources(user_claim)
         resultat = executer_fact_checking(user_claim, sources)
-        st.markdown("### ⚖️ Analyse rigoureuse")
+        st.markdown("### ⚖️ Verdict et Analyse")
         st.write(resultat)
-        st.info("💡 **Note pédagogique :** Le 'Fait Établi' est votre ancrage. Tout ce qui est en dessous sert à analyser comment le débat essaie de transformer ou manipuler cette vérité.")
         with st.expander("🔗 Voir les sources brutes"):
             st.write(sources)
-
-with tab2:
-    st.write("Outils de recherche inversée :")
-    img_url = st.text_input("URL de l'image :")
-    if img_url:
-        col1, col2 = st.columns(2)
-        with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={urllib.parse.quote_plus(img_url)}")
-        with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={urllib.parse.quote_plus(img_url)}")
