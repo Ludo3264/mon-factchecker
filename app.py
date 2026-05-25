@@ -16,9 +16,7 @@ TRUSTED_SITES = [
 
 def search_trusted_sources(claim: str) -> tuple[list[dict], str]:
     query_sites = " OR ".join(TRUSTED_SITES)
-    # Réinsertion du filtre -filetype:pdf pour exclure les documents et rester sur les articles
     search_query = f"{claim} ({query_sites}) -filetype:pdf"
-    
     try:
         search = GoogleSerperAPIWrapper(serper_api_key=st.secrets["SERPER_API_KEY"], gl="fr", hl="fr")
         results = search.results(search_query)
@@ -33,13 +31,16 @@ def search_trusted_sources(claim: str) -> tuple[list[dict], str]:
     return sources_list, "\n\n".join(formatted) if formatted else "Aucune source web trouvée."
 
 # ==============================================================================
-# LOGIQUE D'ANALYSE
+# LOGIQUE D'ANALYSE (Prompt avec clause d'exclusion stricte)
 # ==============================================================================
 ANALYSIS_TEMPLATE = """Tu es un assistant pédagogique en Éducation aux Médias (EMI).
 
 RÈGLES IMPÉRATIVES :
-1. ANALYSE CRITIQUE : Utilise UNIQUEMENT les articles web fournis. Écarte tout document hors sujet.
-2. DISTINCTION : Si les articles se contredisent, expose clairement la contradiction.
+1. ANALYSE CRITIQUE : Utilise UNIQUEMENT les articles web fournis.
+   - SI AUCUNE SOURCE NE TRAITE DIRECTEMENT DU SUJET, DIS-LE CLAIREMENT : "Aucune source pertinente trouvée".
+   - NE TENTE JAMAIS de lier des sujets différents sous prétexte qu'ils partagent des mots-clés isolés (ex: nombres, mots communs). 
+   - Écarte toute source hors sujet.
+2. DISTINCTION : Si les articles se contredisent, expose la contradiction.
 3. CONNAISSANCE EXTERNE : Si tu utilises une info hors sources, précise "Connaissance externe".
 
 SOURCES : {context}
@@ -49,7 +50,7 @@ RÉPONDRE SELON CE PLAN :
 ## 🔎 ÉVALUATION PRÉLIMINAIRE
 Commence par : VRAI, FAUX, NUANCÉ ou INDÉTERMINÉ (en majuscules), suivi de 2 lignes de justification.
 ## 📋 ANALYSE FACTUELLE
-Détaille les preuves trouvées dans les articles.
+Détaille les preuves trouvées uniquement dans les sources pertinentes. Si rien n'est pertinent, dis-le.
 ## ❓ QUESTIONS À SE POSER
 3 à 5 questions critiques pour l'élève.
 ## 🧭 PISTE DE VÉRIFICATION
@@ -69,7 +70,7 @@ def display_verdict(text: str):
     st.markdown(f'<div style="background:{bg};color:{fg};padding:10px;border-radius:5px;font-weight:bold;display:inline-block;">{verdict}</div>', unsafe_allow_html=True)
 
 # ==============================================================================
-# INTERFACE (Identique à votre structure)
+# INTERFACE
 # ==============================================================================
 st.set_page_config(page_title="Fact-Checking EMI", page_icon="🛡️", layout="wide")
 st.title("🛡️ Outil d'Analyse Critique — EMI")
@@ -97,8 +98,8 @@ with tab2:
         c1, c2, c3 = st.columns(3)
         with c1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", use_container_width=True)
         with c2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
-        with c3: st.link_button("🔎 Bing Visual", f"https://www.bing.com/images/search?q=imgurl:{encoded_url}", use_container_width=True)
+        with c3: st.link_button("🔎 Bing Visual", f"https://www.bing.com/images/search?q=imgurl:{encoded_url}&view=detailv2&iss=sbi", use_container_width=True)
 
 with tab3:
     st.markdown("#### Comment fonctionne cet outil ?")
-    st.markdown("Cet outil recherche des articles de fact-checking reconnus et propose une analyse structurée pour développer l'esprit critique.")
+    st.markdown("Cet outil recherche des articles de fact-checking reconnus et propose une analyse structurée. Si aucune source pertinente n'est trouvée, il le signale honnêtement.")
