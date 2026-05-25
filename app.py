@@ -75,61 +75,75 @@ def executer_fact_checking(claim: str, context_sources: str) -> str:
 st.set_page_config(page_title="Fact-Checking Global", page_icon="🛡️", layout="centered")
 
 st.markdown('<p style="font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;">🛡️ Outil de Fact-Checking Global & EMI</p>', unsafe_allow_html=True)
-st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Version Sécurisée & Laboratoires Visuels (Propulsée par Groq & Llama 3.1)</p>', unsafe_allow_html=True)
+st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Version Réseau International & Laboratoires Visuels (Propulsée par Groq & Llama 3.1)</p>', unsafe_allow_html=True)
 
 tab1, tab2, tab3 = st.tabs([
-    "✍️ Vérifier un Texte", 
-    "🖼️ Vérifier une Image",
-    "📹 Vérifier une Vidéo"
+    "✍️ Vérifier un Texte (Moteur IA d'origine)", 
+    "🖼️ Vérifier une Image (Recherche Inversée)",
+    "📹 Vérifier une Vidéo (Analyse visuelle)"
 ])
 
 # ONGLET 1
 with tab1:
-    user_claim = st.text_area("Saisissez l'affirmation à vérifier :", height=100)
+    user_claim = st.text_area("Saisissez l'affirmation à vérifier :", placeholder="Exemple : Une rumeur internationale dit que...", height=100)
     if st.button("Lancer la vérification", type="primary"):
         if not user_claim.strip():
             st.warning("⚠️ Saisissez du texte avant de lancer.")
         else:
-            with st.spinner("🔍 Recherche..."):
+            with st.spinner("🔍 Recherche sur le réseau international..."):
                 sources_text = search_trusted_sources(user_claim)
+            with st.spinner("🤖 Analyse critique multilingue par l'IA..."):
                 resultat_verdict = executer_fact_checking(user_claim, sources_text)
             st.markdown('<p style="font-size:1.3rem; font-weight:bold; margin-top:20px;">⚖️ Analyse et conclusions :</p>', unsafe_allow_html=True)
             if "Je ne trouve aucune vérification" in resultat_verdict:
                 st.info(resultat_verdict)
             else:
                 st.success(resultat_verdict)
-            with st.expander("🔗 Consulter les extraits de presse"):
+            with st.expander("🔗 Consulter les extraits de presse bruts (Monde)"):
                 st.write(sources_text)
 
 # ONGLET 2
 with tab2:
-    st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Traquer l\'origine d\'une image</p>', unsafe_allow_html=True)
-    image_url = st.text_input("Collez l'URL de l'image :", key="url_mode")
+    st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Traquer l\'origine d\'une image ou d\'une photo</p>', unsafe_allow_html=True)
+    image_url = st.text_input("Collez l'URL de l'image (clic droit -> 'Copier le lien de l'image') :", placeholder="https://exemple.com/image.jpg", key="url_mode")
+    
     if image_url:
         try:
-            st.image(image_url, width=300)
+            st.image(image_url, caption="Image soumise via URL", width=300)
             encoded_url = urllib.parse.quote_plus(image_url)
+            lens_url = f"https://lens.google.com/uploadbyurl?url={encoded_url}"
+            tineye_url = f"https://tineye.com/search/?url={encoded_url}"
+            yandex_url = f"https://yandex.com/images/search?rpt=imageview&url={encoded_url}"
+            
             col1, col2, col3 = st.columns(3)
-            with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", type="primary", use_container_width=True)
-            with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
-            with col3: st.link_button("🇷🇺 Yandex", f"https://yandex.com/images/search?rpt=imageview&url={encoded_url}", use_container_width=True)
+            with col1: st.link_button("👁️ Google Lens (URL)", lens_url, type="primary", use_container_width=True)
+            with col2: st.link_button("🤖 TinEye (URL)", tineye_url, use_container_width=True)
+            with col3: st.link_button("🇷🇺 Yandex (URL)", yandex_url, use_container_width=True)
         except Exception:
-            st.error("Lien invalide.")
-    st.caption("Astuce : Pour les images privées (Instagram/TikTok), faites une capture d'écran et uploadez-la sur le site de Google Lens.")
+            st.error("Impossible d'afficher cette image. Vérifiez le lien.")
+
+    st.markdown("---")
+    st.markdown("#### 📱 Option 2 : Vous avez enregistré l'image")
+    col_up1, col_up2 = st.columns(2)
+    with col_up1:
+        st.link_button("📸 Uploader sur Google Lens officiel", "https://lens.google.com", use_container_width=True)
+    with col_up2:
+        st.link_button("🤖 Uploader sur TinEye officiel", "https://tineye.com", use_container_width=True)
+    st.caption("Astuce : Pour les images sur réseaux sociaux, faites une capture d'écran, puis uploadez-la sur Google Lens.")
 
 # ONGLET 3
 with tab3:
     st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Enquêter sur une vidéo suspecte</p>', unsafe_allow_html=True)
-    st.write("**Objectif pédagogique :** Analyser les vidéos détournées ou manipulées.")
+    st.markdown("#### 🛠️ La boîte à outils du Fact-Checking Vidéo")
     col_vid1, col_vid2 = st.columns(2)
     with col_vid1:
-        st.link_button("📥 Extension InVID (Debunker)", "https://chromewebstore.google.com/detail/fake-news-debunker-invid/mhccpoafgdgbhnjfhkcmgknndkeenfhe?hl=fr", type="primary", use_container_width=True)
+        st.link_button("📥 Installer l'extension InVID (Debunker)", "https://chromewebstore.google.com/detail/fake-news-debunker-invid/mhccpoafgdgbhnjfhkcmgknndkeenfhe?hl=fr", type="primary", use_container_width=True)
     with col_vid2:
-        st.link_button("🎓 Guide AFP : Vérifier une vidéo", "https://factuel.afp.com/comment-verifier-une-video", use_container_width=True)
+        st.link_button("🎓 Portail EMI : Les Décodeurs", "https://www.lemonde.fr/les-decodeurs/", use_container_width=True)
     st.markdown("""
     ---
-    ### 💡 Guide d'animation pour vos élèves :
-    1. **Extraire les images clés :** Utilisez l'extension InVID pour découper la vidéo en photos fixes.
-    2. **Recherche inversée :** Uploadez ces photos dans l'**Onglet 2** pour retrouver la source originale.
-    3. **Analyse de contexte :** Vérifiez les éléments visuels (météo, plaques, langues). Si la vidéo semble trop belle ou trop choquante pour être vraie, elle est souvent un montage.
+    ### 💡 Guide d'animation :
+    1. **InVID :** Utilisez l'extension pour extraire les images clés d'une vidéo.
+    2. **Vérification :** Uploadez ces images dans l'**Onglet 2** pour voir si elles ont été détournées.
+    3. **Expertise :** Consultez les dossiers pédagogiques des *Décodeurs* du Monde pour comprendre les mécanismes de désinformation.
     """)
