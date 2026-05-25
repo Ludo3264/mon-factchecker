@@ -1,4 +1,5 @@
 import streamlit as st
+import urllib.parse
 from langchain_groq import ChatGroq
 from langchain_community.utilities import GoogleSerperAPIWrapper
 from langchain_core.prompts import PromptTemplate
@@ -13,64 +14,50 @@ TRUSTED_SITES = [
     "site:francetvinfo.fr/vrai-ou-fake", "site:factcheck.org", "site:fullfact.org",
     "site:snopes.com", "site:reuters.com/fact-check", "site:euvsdisinfo.eu"
 ]
-search_query_restriction = " OR ".join(TRUSTED_SITES)
 
 def search_trusted_sources(claim: str) -> str:
     try:
         search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-        results = search.results(f"({claim}) ({search_query_restriction})")
-        
-        formatted_sources = []
-        for i, res in enumerate(results.get("organic", [])[:5]):
-            title = res.get("title", "Sans titre")
-            link = res.get("link", "#")
-            snippet = res.get("snippet", "")
-            formatted_sources.append(f"Source {i+1}: {title} | URL: {link}\nExtrait: {snippet}")
-            
-        return "\n\n".join(formatted_sources)
+        results = search.results(f"{claim} ({' OR '.join(TRUSTED_SITES)})")
+        formatted = [f"Titre: {res.get('title')} | URL: {res.get('link')}\nExtrait: {res.get('snippet')}" 
+                     for res in results.get("organic", [])[:4]]
+        return "\n\n".join(formatted) if formatted else "Aucune source pertinente trouvée."
     except Exception as e:
         return f"Erreur : {str(e)}"
 
 # ==============================================================================
-# TEMPLATE AVEC TRAÇABILITÉ
-# ==============================================================================
-template = """Tu es un expert en fact-checking. Ta mission est d'établir la vérité avec des sources traçables.
-
-RÈGLES D'AFFICHAGE :
-1. VERDICT : Affiche le verdict (VRAI, FAUX, ou NUANCÉ) tout en haut.
-2. FAITS ÉTABLIS : Liste les faits en citant la [Source X] (Nom du site).
-3. DÉBATS & OPINIONS : Analyse les points de vue avec la référence [Source X].
-4. RÉFÉRENCES & LIENS : Liste explicitement les URLs des sources citées pour vérification.
-
----
-SOURCES FOURNIES (Titre | URL | Extrait) :
-{context}
----
-AFFIRMATION À VÉRIFIER :
-{claim}
-
-RÉPONSE :"""
-
-def executer_fact_checking(claim: str, context_sources: str) -> str:
-    llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
-    prompt = PromptTemplate.from_template(template)
-    
-    chain = ({"context": lambda x: context_sources, "claim": lambda x: claim} 
-             | prompt | llm | StrOutputParser())
-    
-    return chain.invoke({"context": context_sources, "claim": claim})
-
-# ==============================================================================
 # INTERFACE
 # ==============================================================================
-st.set_page_config(page_title="Fact-Checking Traçable", page_icon="🛡️")
-st.title("🛡️ Outil de Fact-Checking (Sources Traçables)")
+st.set_page_config(page_title="Fact-Checking EMI", page_icon="🛡️")
+st.title("🛡️ Outil d'Analyse Critique (EMI)")
 
-user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
-if st.button("Lancer l'analyse factuelle"):
-    with st.spinner("Recherche et analyse en cours..."):
-        sources_info = search_trusted_sources(user_claim)
-        resultat = executer_fact_checking(user_claim, sources_info)
+tab1, tab2 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une Image"])
+
+with tab1:
+    user_claim = st.text_area("Saisissez l'affirmation :")
+    if st.button("Lancer l'analyse"):
+        sources = search_trusted_sources(user_claim)
+        
+        template = """Tu es un expert en fact-checking. 
+        VERDICT : VRAI, FAUX, ou NUANCÉ (en haut).
+        FAITS : Liste les faits avec source et URL.
+        DÉBATS : Sépare les opinions des faits.
+        
+        SOURCES : {context}
+        AFFIRMATION : {claim}"""
+        
+        llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
+        chain = ({"context": lambda x: sources, "claim": lambda x: user_claim} 
+                 | PromptTemplate.from_template(template) | llm | StrOutputParser())
         
         st.markdown("### ⚖️ Verdict et Analyse")
-        st.write(resultat)
+        st.write(chain.invoke({}))
+
+with tab2:
+    st.write("Utilisez ces outils pour effectuer une recherche inversée :")
+    img_url = st.text_input("URL de l'image à vérifier :")
+    if img_url:
+        encoded_url = urllib.parse.quote_plus(img_url)
+        col1, col2 = st.columns(2)
+        with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}")
+        with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}")
