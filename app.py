@@ -14,13 +14,10 @@ TRUSTED_SITES = [
     "site:snopes.com", "site:reuters.com/fact-check", "site:euvsdisinfo.eu"
 ]
 
-def search_trusted_sources(claim: str, exact_match: bool) -> tuple[list[dict], str]:
+def search_trusted_sources(claim: str) -> tuple[list[dict], str]:
     query_sites = " OR ".join(TRUSTED_SITES)
-    # Gestion du mode de recherche : exact (guillemets) ou standard
-    if exact_match:
-        search_query = f'"{claim}" ({query_sites}) -filetype:pdf'
-    else:
-        search_query = f"{claim} ({query_sites}) -filetype:pdf"
+    # Recherche hybride : combine expression exacte et mots-clés sans intervention de l'utilisateur
+    search_query = f'("{claim}" OR {claim}) ({query_sites}) -filetype:pdf'
     
     try:
         search = GoogleSerperAPIWrapper(serper_api_key=st.secrets["SERPER_API_KEY"], gl="fr", hl="fr")
@@ -29,7 +26,7 @@ def search_trusted_sources(claim: str, exact_match: bool) -> tuple[list[dict], s
         return [], f"Erreur de recherche : {e}"
     
     sources_list, formatted = [], []
-    for res in results.get("organic", [])[:4]:
+    for res in results.get("organic", [])[:5]:
         title, link, snippet = res.get("title", "Sans titre"), res.get("link", ""), res.get("snippet", "")
         sources_list.append({"title": title, "link": link, "snippet": snippet})
         formatted.append(f"- {title}\n  URL : {link}\n  Extrait : {snippet}")
@@ -84,12 +81,9 @@ tab1, tab2, tab3 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une 
 
 with tab1:
     user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
-    mode = st.radio("Mode de recherche :", ["Standard (flexible)", "Exacte (restrictive)"], horizontal=True)
-    exact_match = (mode == "Exacte (restrictive)")
-    
     if st.button("🔍 Lancer l'analyse"):
         with st.spinner("Analyse en cours..."):
-            sources_list, context_str = search_trusted_sources(user_claim, exact_match)
+            sources_list, context_str = search_trusted_sources(user_claim)
             resultat = analyze_claim(user_claim, context_str)
             st.markdown("### ⚖️ Résultat")
             display_verdict(resultat)
@@ -101,14 +95,25 @@ with tab1:
 
 with tab2:
     st.markdown("#### Traquer l'origine d'une image")
-    image_url = st.text_input("Collez l'URL de l'image :")
+    st.markdown("Utilisez au moins deux outils et comparez les résultats.")
+    image_url = st.text_input("Collez l'URL de l'image :", placeholder="https://exemple.com/image.jpg")
     if image_url:
         encoded_url = urllib.parse.quote_plus(image_url)
-        c1, c2, c3 = st.columns(3)
-        with c1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", use_container_width=True)
-        with c2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
-        with c3: st.link_button("🔎 Bing Visual", f"https://www.bing.com/images/search?q=imgurl:{encoded_url}", use_container_width=True)
+        st.markdown("##### 🔍 Recherche inversée par URL")
+        col1, col2, col3 = st.columns(3)
+        with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", use_container_width=True)
+        with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
+        with col3: st.link_button("🔎 Bing Visual", f"https://www.bing.com/images/search?q=imgurl:{encoded_url}&view=detailv2&iss=sbi", use_container_width=True)
+    st.markdown("---")
+    st.markdown("##### 📱 Depuis un fichier local")
+    c1, c2, c3 = st.columns(3)
+    with c1: st.link_button("📸 Google Lens", "https://lens.google.com", use_container_width=True)
+    with c2: st.link_button("🤖 TinEye", "https://tineye.com", use_container_width=True)
+    with c3: st.link_button("🔎 Bing Visual", "https://www.bing.com/images/", use_container_width=True)
+    st.markdown("---")
+    st.markdown("##### 💡 Que chercher lors d'une recherche inversée ?")
+    st.markdown("""- **Date de première apparition** : l'image est-elle plus ancienne que le contexte présenté ?\n- **Contexte d'origine** : à quel événement réel est-elle liée ?\n- **Modifications** : la version circulant est-elle identique à l'originale ?\n- **Sources qui la relaient** : quels types de sites la partagent ?""")
 
 with tab3:
     st.markdown("#### Comment fonctionne cet outil ?")
-    st.markdown("Cet outil recherche des articles de fact-checking reconnus et propose une analyse structurée. Si aucune source pertinente n'est trouvée, l'IA est instruite de ne pas inventer de liens.")
+    st.markdown("""**1. Recherche dans des sources de confiance (Serper API)**\nRequête restreinte à des sites de fact-checking reconnus (AFP Factuel, Les Décodeurs, CheckNews, Snopes…). Les URLs retournées sont **réelles** — pas générées par une IA.\n\n**2. Analyse par un LLM (Groq / LLaMA 3.1)**\nLe modèle reçoit uniquement les extraits trouvés à l'étape 1. Il est instruit de ne pas inventer de sources et de signaler les incertitudes. Son rôle est pédagogique : poser des questions, pas trancher.\n\n**3. Affichage différencié**\nSources réelles (Serper) et analyse LLM sont affichées séparément.\n\n---\n#### Limites\n- Les sources peuvent ne pas avoir traité le sujet → "Indéterminé" est une réponse normale et honnête.\n- Le LLM peut mal interpréter les extraits.\n- Un résultat "VRAI" ne dispense pas de vérifier soi-même.\n\n---\n#### Ressources EMI\n- [CLEMI](https://www.clemi.fr) · [AFP Factuel](https://factuel.afp.com) · [Méthode SIFT](https://hapgood.us/2019/06/19/sift-the-four-moves/)""")
