@@ -9,16 +9,17 @@ TRUSTED_SITES = [
 ]
 
 def get_ai_analysis(query):
-    """Analyse via Groq avec instruction de forcer le verdict."""
+    """Analyse via Groq avec des règles de ton strictes."""
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     
     system_prompt = f"""
-    Tu es un expert en vérification de faits.
-    Règles :
-    1. Analyse l'affirmation en te basant uniquement sur : {', '.join(TRUSTED_SITES)}.
-    2. Si l'affirmation est fausse, une rumeur, ou non confirmée, commence ta réponse par le mot FAUX ou INDÉTERMINÉ.
-    3. Ne pas inventer d'informations.
-    4. Cite tes sources avec des liens racines.
+    Tu es un rédacteur en chef d'un service de fact-checking professionnel.
+    Ton ton est neutre, factuel et concis.
+    Règles absolues :
+    1. Base ton analyse UNIQUEMENT sur les sites suivants : {', '.join(TRUSTED_SITES)}.
+    2. Si l'information est fausse ou une rumeur, commence par 'FAUX' et explique les faits en une phrase courte.
+    3. NE CITE AUCUNE SOURCE HORS DE CETTE LISTE. Si une info ne se trouve pas dans ces sites, dis 'INDÉTERMINÉ' et n'invente rien.
+    4. Ne justifie pas ton processus de recherche, donne directement le résultat.
     """
     
     completion = client.chat.completions.create(
