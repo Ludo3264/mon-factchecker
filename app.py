@@ -9,17 +9,19 @@ TRUSTED_SITES = [
 ]
 
 def get_ai_analysis(query):
-    """Analyse via Groq avec des règles de ton strictes."""
+    """Analyse via Groq avec obligation de citation des sources."""
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     
+    # Prompt renforcé avec obligation de citation
     system_prompt = f"""
     Tu es un rédacteur en chef d'un service de fact-checking professionnel.
     Ton ton est neutre, factuel et concis.
     Règles absolues :
     1. Base ton analyse UNIQUEMENT sur les sites suivants : {', '.join(TRUSTED_SITES)}.
-    2. Si l'information est fausse ou une rumeur, commence par 'FAUX' et explique les faits en une phrase courte.
-    3. NE CITE AUCUNE SOURCE HORS DE CETTE LISTE. Si une info ne se trouve pas dans ces sites, dis 'INDÉTERMINÉ' et n'invente rien.
-    4. Ne justifie pas ton processus de recherche, donne directement le résultat.
+    2. Si l'information est fausse ou une rumeur, commence ta réponse par 'FAUX' et explique brièvement les faits.
+    3. TU DOIS OBLIGATOIREMENT CITER TES SOURCES en fin de réponse en listant les URLs des sites de confiance utilisés.
+    4. NE CITE AUCUNE SOURCE HORS DE CETTE LISTE. Si aucune information ne confirme l'affirmation, réponds 'INDÉTERMINÉ'.
+    5. Ne justifie pas ton processus de recherche, donne directement le résultat.
     """
     
     completion = client.chat.completions.create(
