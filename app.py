@@ -177,7 +177,7 @@ with tab3:
 
     col_vid1, col_vid2 = st.columns(2)
     with col_vid1:
-        st.link_button("🛡️ Ouvrir l'outil mondial InVID / WeVerify", "https://www.invid-project.eu/", type="primary", use_container_width=True)
+        st.link_button("📥 Installer / Ouvrir l'extension InVID (Brave & Chrome)", "https://chromewebstore.google.com/detail/fake-news-debunker-invid/mhccpoafgdgbhnjfhkcmgknndkeenfhe?hl=fr", type="primary", use_container_width=True)
         st.caption("L'extension incontournable des journalistes. Elle permet de découper n'importe quelle vidéo du web en images clés d'un simple clic.")
     with col_vid2:
         st.link_button("🎞️ Utiliser Watch Frame by Frame", "http://www.watchframebyframe.com/", use_container_width=True)
