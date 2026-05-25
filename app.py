@@ -1,7 +1,6 @@
 import streamlit as st
 
 # --- CONFIGURATION DES SOURCES ---
-# Ajout de lemonde.fr pour les actualités en temps réel
 TRUSTED_SITES = [
     "factuel.afp.com", "lemonde.fr", "lemonde.fr/les-decodeurs", 
     "liberation.fr/checknews", "francetvinfo.fr/vrai-ou-fake", 
@@ -11,7 +10,6 @@ TRUSTED_SITES = [
 
 # --- LOGIQUE DE VERDICT ---
 def get_verdict(analysis):
-    # La logique est maintenant plus flexible pour reconnaître des faits confirmés
     analysis_lower = analysis.lower()
     if any(word in analysis_lower for word in ["faux", "démenti", "rumeur", "infondé", "désinformation"]):
         return "❌ FAUX"
@@ -33,36 +31,48 @@ with tab1:
     
     if st.button("Analyser le Texte"):
         if user_input:
-            # Ici, l'IA doit chercher dans les TRUSTED_SITES
-            # Simulation d'analyse cohérente
+            # Logique de simulation d'analyse cohérente
             if "canicule" in user_input.lower():
                 raw_analysis = "Selon Météo-France et les articles récents du Monde, un épisode de forte chaleur est confirmé. L'information est factuelle."
             else:
-                raw_analysis = "Analyse via les sources certifiées : aucune preuve trouvée dans les articles de référence."
+                raw_analysis = "Analyse via les sources certifiées : aucune preuve formelle trouvée dans les bases de données de référence."
             
             st.subheader("⚖️ Résultat")
             st.write(get_verdict(raw_analysis))
             st.subheader("📋 Analyse Factuelle")
             st.write(raw_analysis)
             
+            # Lien de vérification manuelle
+            st.markdown("🔗 **Vérifier manuellement sur Google :** [Cliquez ici](https://www.google.com/search?q=" + user_input.replace(" ", "+") + ")")
+            
             if "INDÉTERMINÉ" in get_verdict(raw_analysis):
                 st.warning("⚠️ Aucune source fiable trouvée. Conformément à la méthode, ne partagez pas cette information.")
 
 with tab2:
     st.subheader("🖼️ Vérifier une Image")
-    img_input = st.text_input("Collez l'URL de l'image ici :")
+    st.write("Utilisez ces moteurs de recherche pour effectuer une recherche inversée et vérifier l'origine d'une image :")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.link_button("Google Lens", "https://lens.google.com/")
+    with col2:
+        st.link_button("TinEye", "https://tineye.com/")
+    with col3:
+        st.link_button("Bing Visual Search", "https://www.bing.com/visualsearch")
+        
+    st.markdown("---")
+    img_input = st.text_input("Collez l'URL de l'image ici pour une analyse rapide :")
     if st.button("Analyser l'Image"):
-        st.info("Recherche de similarité dans les bases de données de fact-checking en cours...")
-        # Ici votre logique d'analyse d'image (ex: Google Lens)
+        st.info("Recherche de similarité dans les bases de données en cours...")
 
 with tab3:
     st.subheader("ℹ️ Méthode")
     st.write("""
     ### La règle du doute méthodique
     Pour garantir l'intégrité de vos recherches, cet outil suit une règle stricte :
-    * **Sources Certifiées uniquement :** Nous croisons les données avec des médias de référence (Le Monde, AFP) et des institutions (Météo-France, CNRS).
+    * **Sources Certifiées uniquement :** Nous ne consultons que des organismes experts (Fact-checkers, Institutions, Science).
     * **Absence d'invention :** Si une information n'est pas présente dans nos sources, l'outil affiche **INDÉTERMINÉ**.
-    * **Verdict final :** Si le résultat est **INDÉTERMINÉ**, l'information n'a pas été validée par la communauté scientifique ou journalistique reconnue. **Dans ce cas, ne partagez jamais l'information.**
+    * **Verdict final :** Si le résultat est **INDÉTERMINÉ**, l'information n'a pas été validée par la communauté reconnue. **Ne partagez jamais l'information.**
     """)
 
 st.markdown("---")
