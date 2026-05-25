@@ -17,7 +17,7 @@ TRUSTED_SITES = [
 def search_trusted_sources(claim: str) -> str:
     query_sites = " OR ".join(TRUSTED_SITES)
     search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-    # On ajoute des mots-clés de confirmation pour aider l'IA à trouver le consensus
+    # Recherche incluant des mots-clés de confirmation pour le consensus
     query = f"{claim} confirmation fait établi {query_sites} -filetype:pdf"
     results = search.results(query)
     
@@ -41,14 +41,12 @@ with tab1:
         with st.spinner("Analyse approfondie en cours..."):
             sources = search_trusted_sources(user_claim)
             
-            # Template renforcé pour la recherche de consensus factuel
+            # Template structuré pour forcer le verdict en premier
             template = """Tu es un expert en fact-checking. 
-            TA MISSION : Établir la réalité des faits. 
-            RÈGLES :
-            1. RECHERCHE DE CONSENSUS : Identifie les sources qui confirment un fait établi par les médias de référence.
-            2. MISE EN PERSPECTIVE : Si des articles anciens mentionnent des débats, explique qu'il s'agissait d'un contexte passé et que le fait est désormais largement documenté et reconnu.
-            3. VERDICT : VRAI (si le fait est reconnu), FAUX, ou NUANCÉ.
-            4. TRAÇABILITÉ : Liste les sources.
+            RÈGLES D'ANALYSE :
+            1. VERDICT : Commence par le mot VRAI, FAUX ou NUANCÉ en majuscules.
+            2. ANALYSE : Établis la réalité des faits en recherchant le consensus actuel. Si des articles anciens mentionnent des débats passés, explique qu'il s'agit d'un contexte dépassé et que le fait est aujourd'hui reconnu et documenté.
+            3. TRAÇABILITÉ : Liste les URLs et les dates de publication.
 
             SOURCES DISPONIBLES : {context}
             AFFIRMATION À ANALYSER : {claim}"""
@@ -57,8 +55,30 @@ with tab1:
             chain = PromptTemplate.from_template(template) | llm | StrOutputParser()
             resultat = chain.invoke({"context": sources, "claim": user_claim})
             
-            st.markdown("### ⚖️ Résultat de l'analyse")
-            st.write(resultat)
+            # Gestion de l'affichage coloré
+            st.markdown("### ⚖️ Résultat")
+            if "VRAI" in resultat[:20].upper():
+                st.success(resultat)
+            elif "FAUX" in resultat[:20].upper():
+                st.error(resultat)
+            else:
+                st.warning(resultat)
+            
+            st.download_button("📥 Télécharger le rapport (.txt)", resultat, "analyse.txt")
             
             with st.expander("🔗 Voir les sources détaillées"):
                 st.write(sources)
+
+with tab2:
+    st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Traquer l\'origine d\'une image</p>', unsafe_allow_html=True)
+    image_url = st.text_input("Collez l'URL de l'image :")
+    if image_url:
+        encoded_url = urllib.parse.quote_plus(image_url)
+        col1, col2 = st.columns(2)
+        with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", use_container_width=True)
+        with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
+    st.markdown("---")
+    st.markdown("#### 📱 Option 2 : Upload fichier")
+    c1, c2 = st.columns(2)
+    with c1: st.link_button("📸 Google Lens", "https://lens.google.com", use_container_width=True)
+    with c2: st.link_button("🤖 TinEye", "https://tineye.com", use_container_width=True)
