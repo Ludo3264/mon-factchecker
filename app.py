@@ -33,6 +33,8 @@ def get_expert_analysis(query):
     RÈGLE : Utilise une approche rigoureuse. Recherche des preuves factuelles et institutionnelles.
     Si tu confirmes une info, cite l'article source. Si c'est une rumeur, démontre pourquoi en citant des preuves.
     
+    IMPORTANT : Si la question porte sur un événement survenu dans les dernières 48 heures, précise explicitement à l'utilisateur que tu n'as pas accès aux flux d'actualités en temps réel et qu'il est indispensable de vérifier les sites de presse spécialisés via les liens fournis.
+    
     Structure OBLIGATOIRE :
     [VERDICT] : VRAI, FAUX ou INCERTAIN
     1. Faits observés : (Synthèse des données factuelles).
@@ -96,6 +98,7 @@ with tab3:
     st.subheader("ℹ️ Méthode : Le Doute Méthodique")
     st.markdown("""
     * **Clic-droit** : Utilisez toujours cette option pour ouvrir vos recherches en mode privé.
+    * **Temporalité** : L'IA ne connaît pas les événements des dernières 48h. Vérifiez toujours la presse en direct.
     * **Croisez** : Ne vous fiez jamais à une source unique.
     * **Institutions** : Priorisez les sites officiels (INSEE, Ministère, HCE) pour les sujets de société.
     """)
