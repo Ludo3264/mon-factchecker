@@ -17,7 +17,6 @@ TRUSTED_SITES = [
 def search_trusted_sources(claim: str) -> str:
     query_sites = " OR ".join(TRUSTED_SITES)
     search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-    # Exclusion des PDF pour ne garder que les articles analysables
     query = f"{claim} {query_sites} -filetype:pdf"
     results = search.results(query)
     
@@ -36,33 +35,41 @@ st.title("🛡️ Outil d'Analyse Critique (EMI)")
 tab1, tab2 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une Image"])
 
 with tab1:
-    user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
+    user_claim = st.text_area("Saisissez l'affirmation ou les mots-clés à vérifier :")
     if st.button("Lancer l'analyse textuelle"):
-        with st.spinner("Vérification en cours..."):
+        with st.spinner("Analyse critique en cours..."):
             sources = search_trusted_sources(user_claim)
-            # Prompt optimisé pour la VÉRACITÉ et la PERTINENCE
-            template = """Tu es un expert en fact-checking. 
-            TA MISSION : Établir la VÉRACITÉ de l'affirmation.
-            RÈGLES D'ANALYSE :
-            1. PRIORITÉ À LA PERTINENCE : Utilise en priorité les sources qui traitent DIRECTEMENT du sujet.
-            2. VÉRACITÉ AVANT TOUT : Si la source la plus récente est hors sujet ou ne mentionne pas le fait, ne l'utilise pas pour invalider une information confirmée par des sources plus anciennes mais précises.
-            3. VERDICT : VRAI, FAUX ou NUANCÉ (basé sur le consensus des sources fiables).
-            4. TRAÇABILITÉ : Liste les URLs et les dates de publication.
             
+            # Nouveau template orienté vers l'analyse nuancée et l'esprit critique
+            template = """Tu es un assistant de recherche pour l'Éducation aux Médias et à l'Information (EMI).
+            TA MISSION : Aider l'utilisateur à comprendre la complexité d'une information en analysant les sources fournies.
+
+            RÈGLES STRICTES :
+            1. SYNTHÈSE : Ne conclus pas par un verdict arbitraire. Si les sources sont complexes, expose la nuance.
+            2. CONTEXTUALISATION : Pour chaque source, explique brièvement le contexte (date, sujet principal de l'article).
+            3. GESTION DES CONTRADICTIONS : Si les sources disent des choses différentes, expose clairement la contradiction au lieu de trancher.
+            4. FIABILITÉ : Donne la priorité à la source qui traite le fait le plus directement.
+
+            RÉPONDRE SELON CE FORMAT :
+            - VERDICT : (VRAI / FAUX / NUANCÉ / À VÉRIFIER)
+            - SYNTHÈSE DES FAITS : (Explique ce que disent les sources sans interprétation personnelle)
+            - ANALYSE DU CONTEXTE : (Pourquoi les sources peuvent sembler contradictoires selon leur date ou leur sujet)
+            - SOURCES UTILISÉES : (Liste avec liens et dates si disponibles)
+
             SOURCES : {context}
-            AFFIRMATION : {claim}"""
+            AFFIRMATION À ANALYSER : {claim}"""
             
             llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
             chain = PromptTemplate.from_template(template) | llm | StrOutputParser()
             resultat = chain.invoke({"context": sources, "claim": user_claim})
             
-            st.markdown("### ⚖️ Résultat")
-            if "VRAI" in resultat.upper(): st.success(resultat)
-            elif "FAUX" in resultat.upper(): st.error(resultat)
-            else: st.warning(resultat)
+            st.markdown("### ⚖️ Résultat de l'analyse")
+            st.write(resultat)
             
             st.download_button("📥 Télécharger le rapport (.txt)", f"ANALYSE EMI\n\n{resultat}\n\nSOURCES :\n{sources}", "analyse.txt")
-            with st.expander("🔗 Voir les sources détaillées"): st.write(sources)
+            
+            with st.expander("🔗 Voir les sources détaillées"):
+                st.write(sources)
 
 with tab2:
     st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Traquer l\'origine d\'une image</p>', unsafe_allow_html=True)
