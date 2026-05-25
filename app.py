@@ -8,116 +8,69 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
 # ==============================================================================
-# CONFIGURATION DES SOURCES
+# CONFIGURATION
 # ==============================================================================
 TRUSTED_SITES = [
-    "site:factuel.afp.com",
-    "site:lemonde.fr/les-decodeurs",
-    "site:liberation.fr/checknews",
-    "site:francetvinfo.fr/vrai-ou-fake",
-    "site:factcheck.org",
-    "site:fullfact.org",
-    "site:snopes.com",
-    "site:reuters.com/fact-check",
-    "site:euvsdisinfo.eu"
+    "site:factuel.afp.com", "site:lemonde.fr/les-decodeurs", "site:liberation.fr/checknews",
+    "site:francetvinfo.fr/vrai-ou-fake", "site:factcheck.org", "site:fullfact.org",
+    "site:snopes.com", "site:reuters.com/fact-check", "site:euvsdisinfo.eu"
 ]
 search_query_restriction = " OR ".join(TRUSTED_SITES)
 
-# ==============================================================================
-# LOGIQUE MÉTIER TEXTE
-# ==============================================================================
 def search_trusted_sources(claim: str) -> str:
     try:
         search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-        full_query = f"({claim}) ({search_query_restriction})"
-        return search.run(full_query)
+        return search.run(f"({claim}) ({search_query_restriction})")
     except Exception as e:
-        return f"Erreur moteur de recherche : {str(e)}"
+        return f"Erreur : {str(e)}"
 
-template = """Tu es un expert en fact-checking. Ton rôle est de vérifier l'affirmation en te basant EXCLUSIVEMENT sur les extraits fournis.
+template = """Tu es un expert en fact-checking. Vérifie l'affirmation en te basant EXCLUSIVEMENT sur les extraits fournis.
 
-RÈGLES DE RÉPONSE STRICTES :
+RÈGLES :
 1. Si l'info n'est pas vérifiable, réponds : "Je ne trouve aucune vérification dans les sources."
-2. Si l'info est vérifiée, structure ainsi :
+2. Si vérifiée, structure ainsi :
    - VERDICT : VRAI / FAUX / NUANCÉ
-   - EXPLICATION : Résumé factuel de la situation.
-   - SOURCE : Identifie le nom du média (ex: Le Monde, AFP, Libération) en te basant sur le contexte ou l'URL. Si le nom n'est pas explicite, indique le nom du domaine source le plus probable.
-   - TITRE DE RÉFÉRENCE : Donne le TITRE de l'article trouvé dans le texte si disponible.
-3. Ne jamais utiliser de connaissances externes.
-4. Si les sources sont en anglais, traduis le résultat en français.
+   - EXPLICATION : Résumé factuel.
+   - SOURCE : Identifie le média (ex: Le Monde, CheckNews). Si non explicite, indique le domaine probable.
+   - TITRE DE RÉFÉRENCE : Donne le titre si disponible, sinon "Non disponible".
+3. Ne pas utiliser de connaissances externes.
 
 ---
-EXTRAITS DE PRESSE FOURNIS :
-{context}
+EXTRAITS : {context}
 ---
-
-AFFIRMATION À ANALYSER :
-{claim}
-
+AFFIRMATION : {claim}
 RÉPONSE :"""
 
-prompt = PromptTemplate.from_template(template)
-
 def executer_fact_checking(claim: str, context_sources: str) -> str:
-    try:
-        llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
-        fact_check_chain = (
-            {"context": RunnablePassthrough(), "claim": RunnablePassthrough()}
-            | prompt
-            | llm
-            | StrOutputParser()
-        )
-        return fact_check_chain.invoke({"context": context_sources, "claim": claim})
-    except Exception as e:
-        return f"Erreur d'analyse : {str(e)}"
+    llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
+    chain = ({"context": RunnablePassthrough(), "claim": RunnablePassthrough()} 
+             | PromptTemplate.from_template(template) | llm | StrOutputParser())
+    return chain.invoke({"context": context_sources, "claim": claim})
 
 # ==============================================================================
-# INTERFACE UTILISATEUR
+# INTERFACE
 # ==============================================================================
-st.set_page_config(page_title="Fact-Checking Global", page_icon="🛡️", layout="centered")
+st.set_page_config(page_title="Fact-Checking", page_icon="🛡️")
+st.title("🛡️ Outil de Fact-Checking Pédagogique")
 
-st.markdown('<p style="font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;">🛡️ Outil de Fact-Checking</p>', unsafe_allow_html=True)
-st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Version spécialisée (Texte & Image)</p>', unsafe_allow_html=True)
+tab1, tab2 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une Image"])
 
-tab1, tab2 = st.tabs([
-    "✍️ Vérifier un Texte", 
-    "🖼️ Vérifier une Image (Recherche Inversée)"
-])
-
-# ONGLET 1
 with tab1:
-    user_claim = st.text_area("Saisissez l'affirmation à vérifier :", placeholder="Exemple : Une rumeur internationale dit que...", height=100)
-    if st.button("Lancer la vérification", type="primary"):
-        if not user_claim.strip():
-            st.warning("⚠️ Saisissez du texte avant de lancer.")
-        else:
-            with st.spinner("🔍 Recherche sur le réseau international..."):
-                sources_text = search_trusted_sources(user_claim)
-            with st.spinner("🤖 Analyse critique multilingue par l'IA..."):
-                resultat_verdict = executer_fact_checking(user_claim, sources_text)
-            
-            st.markdown('<p style="font-size:1.3rem; font-weight:bold; margin-top:20px;">⚖️ Analyse et conclusions :</p>', unsafe_allow_html=True)
-            st.write(resultat_verdict)
-            
-            with st.expander("🔗 Consulter les extraits de presse bruts (Monde)"):
-                st.write(sources_text)
+    user_claim = st.text_area("Saisissez l'affirmation :")
+    if st.button("Vérifier"):
+        sources = search_trusted_sources(user_claim)
+        resultat = executer_fact_checking(user_claim, sources)
+        st.markdown("### ⚖️ Analyse")
+        st.write(resultat)
+        # CONSEIL PÉDAGOGIQUE INTÉGRÉ
+        st.info("💡 **Conseil :** Si la source est 'Non disponible', cliquez sur l'expander ci-dessous pour identifier vous-mêmes le média et chercher l'article original.")
+        with st.expander("🔗 Consulter les extraits bruts"):
+            st.write(sources)
 
-# ONGLET 2
 with tab2:
-    st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Traquer l\'origine d\'une image</p>', unsafe_allow_html=True)
-    image_url = st.text_input("Collez l'URL de l'image :", placeholder="https://exemple.com/image.jpg", key="url_mode")
-    if image_url:
-        try:
-            st.image(image_url, caption="Image soumise via URL", width=300)
-            encoded_url = urllib.parse.quote_plus(image_url)
-            col1, col2 = st.columns(2)
-            with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", type="primary", use_container_width=True)
-            with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
-        except Exception:
-            st.error("Impossible d'afficher cette image.")
-    st.markdown("---")
-    st.markdown("#### 📱 Option : Vous avez enregistré l'image sur votre appareil")
-    col_up1, col_up2 = st.columns(2)
-    with col_up1: st.link_button("📸 Uploader sur Google Lens officiel", "https://lens.google.com", use_container_width=True)
-    with col_up2: st.link_button("🤖 Uploader sur TinEye officiel", "https://tineye.com", use_container_width=True)
-    st.caption("💡 Astuce : Utilisez le titre et la source fournis dans l'onglet 1 pour effectuer une recherche approfondie.")
+    st.write("Utilisez les outils ci-dessous pour une recherche inversée :")
+    img_url = st.text_input("URL de l'image :")
+    if img_url:
+        col1, col2 = st.columns(2)
+        with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={urllib.parse.quote_plus(img_url)}")
+        with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={urllib.parse.quote_plus(img_url)}")
