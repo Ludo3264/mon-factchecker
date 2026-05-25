@@ -1,6 +1,5 @@
 import streamlit as st
 import urllib.parse
-import re
 from langchain_groq import ChatGroq
 from langchain_community.utilities import GoogleSerperAPIWrapper
 from langchain_core.prompts import PromptTemplate
@@ -17,7 +16,6 @@ TRUSTED_SITES = [
 
 def search_trusted_sources(claim: str) -> tuple[list[dict], str]:
     query_sites = " OR ".join(TRUSTED_SITES)
-    # Suppression du filtre -filetype:pdf pour inclure les rapports officiels
     search_query = f"{claim} ({query_sites})"
     
     try:
@@ -27,53 +25,74 @@ def search_trusted_sources(claim: str) -> tuple[list[dict], str]:
         )
         results = search.results(search_query)
     except Exception as e:
-        st.error(f"❌ Erreur Serper : {e}")
-        return [], "Aucune source disponible."
+        return [], f"Erreur lors de la recherche : {e}"
 
     sources_list, formatted = [], []
     for res in results.get("organic", [])[:4]:
         title, link, snippet = res.get("title", "Sans titre"), res.get("link", ""), res.get("snippet", "")
         sources_list.append({"title": title, "link": link, "snippet": snippet})
         formatted.append(f"- {title}\n  URL : {link}\n  Extrait : {snippet}")
-    context_str = "\n\n".join(formatted) if formatted else "Aucune source pertinente trouvée."
+    context_str = "\n\n".join(formatted) if formatted else "Aucune source trouvée."
     return sources_list, context_str
 
-# Template mis à jour pour hiérarchiser les PDF comme preuves documentaires
-ANALYSIS_TEMPLATE = """Tu es un assistant pédagogique spécialisé en Éducation aux Médias et à l'Information (EMI).
+# ==============================================================================
+# LOGIQUE D'ANALYSE (LLM)
+# ==============================================================================
+ANALYSIS_TEMPLATE = """Tu es un assistant pédagogique en Éducation aux Médias (EMI).
+RÈGLES :
+1. Analyse les sources fournies (sites web ET documents PDF).
+2. Si une info est absente, ne l'invente pas. 
+3. Sois transparent : si tu utilises tes propres connaissances, précise "Connaissance externe".
+4. S'il y a des contradictions entre sources, expose-les.
 
-RÈGLES IMPÉRATIVES :
-1. ANALYSE CRITIQUE : Utilise UNIQUEMENT les sources fournies. 
-   - Si tu identifies des documents PDF parmi les sources, traite-les comme des rapports officiels ou des études de référence et donne-leur un poids important dans l'évaluation.
-   - Si une source est trop technique ou hors sujet, écarte-la explicitement.
-2. DISTINCTION : Si une source contredit l'autre, expose clairement la contradiction.
-3. CONNAISSANCE EXTERNE : Si tu utilises une info hors sources, précise "Connaissance externe".
+SOURCES : {context}
+AFFIRMATION : {claim}
 
-SOURCES VÉRIFIÉES :
-{context}
-
-AFFIRMATION ANALYSÉE : {claim}
-
+RÉPONDRE SELON CE PLAN :
 ## 🔎 ÉVALUATION PRÉLIMINAIRE
-Commence par : VRAI / FAUX / NUANCÉ / INDÉTERMINÉ (en majuscules), suivi d'une justification courte.
-
+Commence par : VRAI, FAUX, NUANCÉ ou INDÉTERMINÉ (en majuscules), suivi de 2 lignes de justification.
 ## 📋 ANALYSE FACTUELLE
-Analyse le contenu des sites ET des documents (PDF). Mentionne si un document officiel apporte une preuve définitive ou une nuance.
-
+Détaille les preuves trouvées dans les sources (inclus les PDF).
 ## ❓ QUESTIONS À SE POSER
-3 à 5 questions critiques pour l'utilisateur.
-
-## 🧭 PISTE DE VÉRIFICATION PERSONNELLE
-Démarche concrète que l'utilisateur peut faire.
-
+3 à 5 questions critiques pour l'élève.
+## 🧭 PISTE DE VÉRIFICATION
+Démarche concrète de vérification.
 ## ⚠️ MISE EN GARDE
-Risques d'hallucination ou sujets sensibles."""
+Risques d'hallucination ou sensibilité du sujet."""
 
 def analyze_claim(claim: str, context: str) -> str:
-    try:
-        llm = ChatGroq(api_key=st.secrets["GROQ_API_KEY"], model="llama-3.1-8b-instant", temperature=0)
-        chain = PromptTemplate.from_template(ANALYSIS_TEMPLATE) | llm | StrOutputParser()
-        return chain.invoke({"context": context, "claim": claim})
-    except Exception as e:
-        return f"❌ Erreur LLM : {e}"
+    llm = ChatGroq(api_key=st.secrets["GROQ_API_KEY"], model="llama-3.1-8b-instant", temperature=0)
+    chain = PromptTemplate.from_template(ANALYSIS_TEMPLATE) | llm | StrOutputParser()
+    return chain.invoke({"context": context, "claim": claim})
 
-# (Les fonctions detect_verdict, display_verdict_badge et la suite de l'interface restent identiques à votre code précédent)
+def display_verdict(text: str):
+    verdict = next((v for v in ["VRAI", "FAUX", "NUANCÉ", "INDÉTERMINÉ"] if v in text[:50].upper()), "INDÉTERMINÉ")
+    cfg = {"VRAI": ("#d1fae5", "#065f46"), "FAUX": ("#fee2e2", "#991b1b"), "NUANCÉ": ("#fef3c7", "#92400e"), "INDÉTERMINÉ": ("#e0e7ff", "#3730a3")}
+    bg, fg = cfg.get(verdict, ("#f3f4f6", "#374151"))
+    st.markdown(f'<div style="background:{bg};color:{fg};padding:10px;border-radius:5px;font-weight:bold;">{verdict}</div>', unsafe_allow_html=True)
+
+# ==============================================================================
+# INTERFACE
+# ==============================================================================
+st.set_page_config(page_title="Fact-Checking EMI", page_icon="🛡️")
+st.title("🛡️ Outil d'Analyse Critique — EMI")
+
+user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
+
+if st.button("🔍 Lancer l'analyse"):
+    if not user_claim:
+        st.warning("Veuillez entrer un texte.")
+    else:
+        with st.spinner("Analyse en cours..."):
+            sources_list, context_str = search_trusted_sources(user_claim)
+            resultat = analyze_claim(user_claim, context_str)
+            
+            st.markdown("### ⚖️ Résultat")
+            display_verdict(resultat)
+            st.markdown(resultat)
+            
+            with st.expander("🔗 Voir les sources"):
+                for s in sources_list:
+                    st.write(f"**{s['title']}**: {s['link']}")
+            
+            st.download_button("📥 Télécharger le rapport", resultat, "analyse.txt")
