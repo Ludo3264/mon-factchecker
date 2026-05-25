@@ -48,7 +48,6 @@ with tab1:
                     up_analysis = analysis.upper()
                     
                     st.subheader("⚖️ Résultat")
-                    # Logique de détection prioritaire
                     if any(word in up_analysis for word in ["FAUX", "DÉMENTI", "MENSONGE"]):
                         st.error("❌ **FAUX**")
                     elif "INDÉTERMINÉ" in up_analysis:
@@ -70,7 +69,6 @@ with tab1:
     c1.link_button("Fact Check Explorer", "https://toolbox.google.com/factcheck/explorer")
     c2.link_button("CORTEX (Esprit critique)", "https://cortecs.org/")
 
-# --- ONGLETS 2 & 3 (inchangés) ---
 with tab2:
     st.subheader("🖼️ Vérifier une Image")
     st.write("Utilisez ces outils pour effectuer une recherche inversée :")
@@ -78,10 +76,24 @@ with tab2:
     col1.link_button("Google Lens", "https://lens.google.com/")
     col2.link_button("TinEye", "https://tineye.com/")
     col3.link_button("Bing Visual Search", "https://www.bing.com/visualsearch")
+    
+    st.markdown("---")
     img_input = st.text_input("Collez l'URL de l'image ici :")
     if st.button("Analyser l'Image"):
-        st.info("Recherche en cours...")
+        st.info("Recherche de similarité dans les bases de données en cours...")
 
 with tab3:
     st.subheader("ℹ️ Méthode : La règle du doute méthodique")
-    st.write("1. Sources Certifiées uniquement. 2. Zéro invention. 3. Si INDÉTERMINÉ, ne pas partager.")
+    st.write("""
+    Face à une information douteuse, adoptez les réflexes des journalistes :
+    
+    1. **Croisement des sources :** Ne vous contentez jamais d'une seule source. Vérifiez si l'information est reprise par nos sites de référence (AFP, Le Monde, Libération, etc.).
+    2. **Analyse de la preuve :** Une information sans source primaire ou lien vers un document officiel est suspecte.
+    3. **Le doute méthodique :** Si, après vérification, aucune source fiable ne confirme l'information, considérez-la comme **INDÉTERMINÉE**.
+    4. **Responsabilité :** Si le résultat est **INDÉTERMINÉ** ou **FAUX**, ne partagez pas l'information sur les réseaux sociaux. La désinformation se nourrit de notre impulsivité.
+    
+    *« Le doute est un hommage rendu à la vérité. »*
+    """)
+
+st.markdown("---")
+st.caption("Outil pédagogique pour l'Éducation aux Médias et à l'Information.")
