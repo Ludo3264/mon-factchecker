@@ -14,10 +14,13 @@ TRUSTED_SITES = [
     "site:snopes.com", "site:reuters.com/fact-check", "site:euvsdisinfo.eu"
 ]
 
-def search_trusted_sources(claim: str) -> tuple[list[dict], str]:
+def search_trusted_sources(claim: str, exact_match: bool) -> tuple[list[dict], str]:
     query_sites = " OR ".join(TRUSTED_SITES)
-    # Utilisation des guillemets "" pour une recherche restrictive sur l'expression exacte
-    search_query = f'"{claim}" ({query_sites}) -filetype:pdf'
+    # Gestion du mode de recherche : exact (guillemets) ou standard
+    if exact_match:
+        search_query = f'"{claim}" ({query_sites}) -filetype:pdf'
+    else:
+        search_query = f"{claim} ({query_sites}) -filetype:pdf"
     
     try:
         search = GoogleSerperAPIWrapper(serper_api_key=st.secrets["SERPER_API_KEY"], gl="fr", hl="fr")
@@ -30,10 +33,10 @@ def search_trusted_sources(claim: str) -> tuple[list[dict], str]:
         title, link, snippet = res.get("title", "Sans titre"), res.get("link", ""), res.get("snippet", "")
         sources_list.append({"title": title, "link": link, "snippet": snippet})
         formatted.append(f"- {title}\n  URL : {link}\n  Extrait : {snippet}")
-    return sources_list, "\n\n".join(formatted) if formatted else "Aucune source web pertinente trouvée pour cette affirmation précise."
+    return sources_list, "\n\n".join(formatted) if sources_list else "Aucune source web pertinente trouvée."
 
 # ==============================================================================
-# LOGIQUE D'ANALYSE (Prompt avec exclusion stricte)
+# LOGIQUE D'ANALYSE
 # ==============================================================================
 ANALYSIS_TEMPLATE = """Tu es un assistant pédagogique en Éducation aux Médias (EMI).
 
@@ -52,7 +55,7 @@ RÉPONDRE SELON CE PLAN :
 ## 🔎 ÉVALUATION PRÉLIMINAIRE
 Commence par : VRAI, FAUX, NUANCÉ ou INDÉTERMINÉ (en majuscules), suivi de 2 lignes de justification.
 ## 📋 ANALYSE FACTUELLE
-Détaille les preuves trouvées uniquement dans les sources pertinentes. Si rien n'est pertinent, dis-le.
+Détaille les preuves trouvées uniquement dans les sources pertinentes. Si rien n'est pertinent, dis-le clairement.
 ## ❓ QUESTIONS À SE POSER
 3 à 5 questions critiques pour l'élève.
 ## 🧭 PISTE DE VÉRIFICATION
@@ -81,9 +84,12 @@ tab1, tab2, tab3 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une 
 
 with tab1:
     user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
+    mode = st.radio("Mode de recherche :", ["Standard (flexible)", "Exacte (restrictive)"], horizontal=True)
+    exact_match = (mode == "Exacte (restrictive)")
+    
     if st.button("🔍 Lancer l'analyse"):
         with st.spinner("Analyse en cours..."):
-            sources_list, context_str = search_trusted_sources(user_claim)
+            sources_list, context_str = search_trusted_sources(user_claim, exact_match)
             resultat = analyze_claim(user_claim, context_str)
             st.markdown("### ⚖️ Résultat")
             display_verdict(resultat)
@@ -101,8 +107,8 @@ with tab2:
         c1, c2, c3 = st.columns(3)
         with c1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", use_container_width=True)
         with c2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
-        with c3: st.link_button("🔎 Bing Visual", f"https://www.bing.com/images/search?q=imgurl:{encoded_url}&view=detailv2&iss=sbi", use_container_width=True)
+        with c3: st.link_button("🔎 Bing Visual", f"https://www.bing.com/images/search?q=imgurl:{encoded_url}", use_container_width=True)
 
 with tab3:
     st.markdown("#### Comment fonctionne cet outil ?")
-    st.markdown("Cet outil recherche des articles de fact-checking reconnus et propose une analyse structurée. En cas d'absence de source pertinente, l'outil le signale honnêtement.")
+    st.markdown("Cet outil recherche des articles de fact-checking reconnus et propose une analyse structurée. Si aucune source pertinente n'est trouvée, l'IA est instruite de ne pas inventer de liens.")
