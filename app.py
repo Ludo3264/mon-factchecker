@@ -15,14 +15,16 @@ TRUSTED_SITES = [
 ]
 
 def search_trusted_sources(claim: str) -> str:
-    # Utilisation dynamique de la liste des sites
+    # Construction dynamique de la requête avec exclusion des PDF et recherche exacte
     query_sites = " OR ".join(TRUSTED_SITES)
     search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-    query = f"{claim} {query_sites}"
+    query = f'"{claim}" {query_sites} -filetype:pdf'
     results = search.results(query)
+    
     formatted = []
     for res in results.get("organic", [])[:3]:
         formatted.append(f"Source: {res.get('title')} | URL: {res.get('link')}\nExtrait: {res.get('snippet')}")
+    
     return "\n\n".join(formatted) if formatted else "Aucune source pertinente trouvée."
 
 # ==============================================================================
@@ -51,7 +53,6 @@ with tab1:
             chain = PromptTemplate.from_template(template) | llm | StrOutputParser()
             resultat = chain.invoke({"context": sources, "claim": user_claim})
             
-            # Affichage coloré selon le verdict
             st.markdown("### ⚖️ Résultat")
             if "VRAI" in resultat.upper():
                 st.success(resultat)
@@ -78,7 +79,6 @@ with tab2:
         try:
             st.image(image_url, caption="Image soumise via URL", width=300)
             encoded_url = urllib.parse.quote_plus(image_url)
-            
             col1, col2 = st.columns(2)
             with col1:
                 st.link_button("👁️ Google Lens (URL)", f"https://lens.google.com/uploadbyurl?url={encoded_url}", type="primary", use_container_width=True)
