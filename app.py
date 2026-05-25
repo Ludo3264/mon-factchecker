@@ -1,32 +1,24 @@
 import streamlit as st
 from groq import Groq
 
-# --- CONFIGURATION ---
+# --- CONFIGURATION DES SOURCES ---
 TRUSTED_SITES = [
-    "factuel.afp.com", 
-    "lemonde.fr", 
-    "liberation.fr/checknews", 
-    "francetvinfo.fr/vrai-ou-fake", 
-    "snopes.com", 
-    "lejournal.cnrs.fr", 
-    "service-public.fr", 
-    "meteofrance.com",
-    "radiofrance.fr"
+    "factuel.afp.com", "lemonde.fr", "liberation.fr/checknews", 
+    "francetvinfo.fr/vrai-ou-fake", "snopes.com", "cnrs.fr", 
+    "service-public.fr", "meteofrance.com", "radiofrance.fr"
 ]
 
 def get_ai_analysis(query):
-    """Analyse via Groq avec moteur de vérification."""
+    """Analyse via Groq avec instruction de forcer le verdict."""
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     
     system_prompt = f"""
-    Tu es un expert en vérification de faits (Fact-checker) pour l'EMI.
-    Règles strictes :
-    1. Si l'affirmation concerne une personnalité, donne d'abord une définition factuelle à jour.
-    2. Base ton analyse UNIQUEMENT sur ces sources : {', '.join(TRUSTED_SITES)}.
-    3. Si l'information est une rumeur ou fausse, réponds 'FAUX'.
-    4. Si l'information n'est pas confirmée, réponds 'INDÉTERMINÉ'.
-    5. Pour les sources, cite uniquement les pages d'accueil des sites de confiance suivants : {', '.join(TRUSTED_SITES)}.
-    6. Ne jamais inventer.
+    Tu es un expert en vérification de faits.
+    Règles :
+    1. Analyse l'affirmation en te basant uniquement sur : {', '.join(TRUSTED_SITES)}.
+    2. Si l'affirmation est fausse, une rumeur, ou non confirmée, commence ta réponse par le mot FAUX ou INDÉTERMINÉ.
+    3. Ne pas inventer d'informations.
+    4. Cite tes sources avec des liens racines.
     """
     
     completion = client.chat.completions.create(
@@ -53,15 +45,16 @@ with tab1:
             with st.spinner("Analyse rigoureuse en cours..."):
                 try:
                     analysis = get_ai_analysis(user_input)
-                    st.subheader("⚖️ Résultat")
+                    up_analysis = analysis.upper()
                     
-                    if "FAUX" in analysis.upper():
-                        st.write("❌ **FAUX**")
-                    elif "INDÉTERMINÉ" in analysis.upper():
-                        st.write("❓ **INDÉTERMINÉ**")
-                        st.warning("⚠️ Aucune source fiable trouvée. Conformément à la méthode, ne partagez pas cette information.")
+                    st.subheader("⚖️ Résultat")
+                    # Logique de détection prioritaire
+                    if any(word in up_analysis for word in ["FAUX", "DÉMENTI", "MENSONGE"]):
+                        st.error("❌ **FAUX**")
+                    elif "INDÉTERMINÉ" in up_analysis:
+                        st.warning("❓ **INDÉTERMINÉ**")
                     else:
-                        st.write("✅ **VÉRIFIÉ / PROBABLE**")
+                        st.success("✅ **PROBABLEMENT VRAI**")
                     
                     st.subheader("📋 Analyse Factuelle")
                     st.markdown(analysis)
@@ -70,34 +63,25 @@ with tab1:
                     st.error(f"Erreur technique : {e}")
         else:
             st.warning("Veuillez saisir une affirmation.")
-            
+
     st.markdown("---")
     st.write("### 🔍 Outils experts (pour vérifier vous-même) :")
-    col_a, col_b = st.columns(2)
-    col_a.link_button("Fact Check Explorer (Google)", "https://toolbox.google.com/factcheck/explorer")
-    col_b.link_button("CORTEX (Esprit critique)", "https://cortecs.org/")
+    c1, c2 = st.columns(2)
+    c1.link_button("Fact Check Explorer", "https://toolbox.google.com/factcheck/explorer")
+    c2.link_button("CORTEX (Esprit critique)", "https://cortecs.org/")
 
+# --- ONGLETS 2 & 3 (inchangés) ---
 with tab2:
     st.subheader("🖼️ Vérifier une Image")
     st.write("Utilisez ces outils pour effectuer une recherche inversée :")
-    
     col1, col2, col3 = st.columns(3)
     col1.link_button("Google Lens", "https://lens.google.com/")
     col2.link_button("TinEye", "https://tineye.com/")
     col3.link_button("Bing Visual Search", "https://www.bing.com/visualsearch")
-        
-    st.markdown("---")
     img_input = st.text_input("Collez l'URL de l'image ici :")
     if st.button("Analyser l'Image"):
-        st.info("Recherche de similarité dans les bases de données en cours...")
+        st.info("Recherche en cours...")
 
 with tab3:
     st.subheader("ℹ️ Méthode : La règle du doute méthodique")
-    st.write("""
-    1. **Sources Certifiées uniquement :** AFP Factuel, Le Monde, Libération, CNRS, etc.
-    2. **Zéro invention :** Si l'information est absente de ces sources, l'outil affiche **INDÉTERMINÉ**.
-    3. **Action :** Si le résultat est **INDÉTERMINÉ**, l'information n'est pas fiable. **Ne la partagez pas.**
-    """)
-
-st.markdown("---")
-st.caption("Outil pédagogique pour l'Éducation aux Médias et à l'Information.")
+    st.write("1. Sources Certifiées uniquement. 2. Zéro invention. 3. Si INDÉTERMINÉ, ne pas partager.")
