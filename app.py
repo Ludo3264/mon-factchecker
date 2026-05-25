@@ -30,17 +30,15 @@ def search_trusted_sources(claim: str) -> str:
         return f"Erreur : {str(e)}"
 
 # ==============================================================================
-# TEMPLATE RIGUEUR FACTUELLE
+# TEMPLATE RIGUEUR FACTUELLE (Verdict en tête)
 # ==============================================================================
 template = """Tu es un expert en fact-checking. Ta mission est d'établir la vérité factuelle.
 
-RÈGLES D'OR :
-1. VÉRITÉ FACTUELLE : Un fait documenté par les sources fournies est une VÉRITÉ ÉTABLIE. Ne jamais le qualifier de "discutable" ou "nuancé".
-2. ANALYSE :
-   - FAITS ÉTABLIS : Liste uniquement les faits prouvés en citant la source correspondante sous la forme.
-   - DÉBATS & OPINIONS : Analyse les commentaires politiques sans les confondre avec des faits.
-   - VERDICT : VRAI, FAUX ou NUANCÉ.
-3. CITATIONS : Utilise impérativement le format en te basant sur les sources numérotées ci-dessous.
+RÈGLES D'AFFICHAGE :
+1. VERDICT : Affiche le verdict (VRAI, FAUX, ou NUANCÉ) tout en haut de ta réponse.
+2. FAITS ÉTABLIS : Liste uniquement les faits prouvés en utilisant la référence [Source X] issue des extraits ci-dessous.
+3. DÉBATS & OPINIONS : Analyse les commentaires sans les confondre avec des faits.
+4. RÉFÉRENCES : Liste le texte des sources utilisées avec leur numéro correspondant.
 
 ---
 EXTRAITS SOURCES :
@@ -52,7 +50,6 @@ AFFIRMATION À VÉRIFIER :
 RÉPONSE :"""
 
 def executer_fact_checking(claim: str, context_sources: str) -> str:
-    # Nettoyage et structuration des sources pour forcer la citation précise
     sources_liste = context_sources.split("...") 
     sources_structurees = "\n".join([f"Source {i+1}: {s.strip()}" for i, s in enumerate(sources_liste) if len(s) > 10])
     
@@ -68,7 +65,7 @@ def executer_fact_checking(claim: str, context_sources: str) -> str:
 # INTERFACE
 # ==============================================================================
 st.set_page_config(page_title="Fact-Checking Rigoureux", page_icon="🛡️")
-st.title("🛡️ Outil de Fact-Checking (Rigueur Absolue)")
+st.title("🛡️ Outil de Fact-Checking (Verdict en Premier)")
 
 user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
 if st.button("Lancer l'analyse factuelle"):
@@ -79,5 +76,5 @@ if st.button("Lancer l'analyse factuelle"):
         st.markdown("### ⚖️ Verdict et Analyse")
         st.write(resultat)
         
-        with st.expander("🔗 Voir les sources brutes (pour vérification)"):
+        with st.expander("🔗 Voir les sources brutes"):
             st.write(sources_brutes)
