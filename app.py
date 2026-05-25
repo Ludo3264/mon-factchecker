@@ -16,16 +16,18 @@ SOURCES = {
 # --- LOGIQUE IA ---
 def get_expert_analysis(query):
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-    prompt = f"""
-    Nous sommes le {datetime.now().strftime('%d %B %Y')}. Expert EMI.
-    Analyse l'affirmation. Si c'est une rumeur, déclare-la FAUSSE fermement.
-    OBLIGATOIRE : Cite des URL cliquables dans ton analyse.
-    Structure :
+    current_date = datetime.now().strftime('%d %B %Y')
+    system_prompt = f"""
+    Nous sommes le {current_date}. Tu es un expert EMI. 
+    RÈGLE 1 : Considère la date du {current_date} comme un fait établi.
+    RÈGLE 2 : Analyse l'affirmation. Si elle est fausse/rumeur, déclare-la FAUSSE fermement. 
+    RÈGLE 3 : Si tu ne peux pas vérifier en temps réel, renvoie vers les liens fournis.
+    Structure OBLIGATOIRE :
     [VERDICT] : VRAI, FAUX ou INCERTAIN
-    1. Faits observés, 2. Biais détectés, 3. Méthodologie, 4. Sources (URL).
+    1. Faits observés (dates, données). 2. Biais détectés. 3. Méthodologie. 4. Sources (URL cliquables).
     """
     completion = client.chat.completions.create(
-        messages=[{"role": "system", "content": prompt}, {"role": "user", "content": query}],
+        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": query}],
         model="llama-3.1-8b-instant"
     )
     return completion.choices[0].message.content
@@ -50,24 +52,18 @@ with tab1:
 
     if st.session_state.get('step') == 1:
         st.markdown(f"### 🔍 Sources suggérées ({st.session_state.cat})")
-        # Boutons sources
         cols = st.columns(len(SOURCES[st.session_state.cat]))
         for i, (name, base_url) in enumerate(SOURCES[st.session_state.cat].items()):
             cols[i].link_button(name, f"{base_url}{st.session_state.user_input.replace(' ', '+')}")
         
-        # Champ de recherche libre pour l'élève
         st.write("---")
-        st.write("💡 **Vous voulez chercher ailleurs ?**")
-        search_url = st.text_input("Tapez votre propre moteur de recherche (ex: Google, DuckDuckGo) :", "https://www.google.com/search?q=")
-        st.link_button("Lancer ma recherche personnalisée", f"{search_url}{st.session_state.user_input.replace(' ', '+')}")
-        
-        st.markdown("---")
         st.subheader("📝 Bilan de votre recherche")
-        user_bilan = st.text_area("Rédigez votre conclusion :")
+        user_bilan = st.text_area("Rédigez votre conclusion après avoir consulté les sources :")
         
         if st.button("Comparer mon bilan avec l'expert"):
             analysis = st.session_state.analysis
             color = "#ff5252" if "[FAUX]" in analysis.upper() else "#4caf50" if "[VRAI]" in analysis.upper() else "#ff9800"
+            
             c1, c2 = st.columns(2)
             c1.info(f"👤 **Votre Bilan :**\n\n{user_bilan}")
             c2.markdown(f"""<div style="background-color: {color}15; padding: 15px; border-radius: 10px; border-left: 5px solid {color};">
@@ -75,6 +71,7 @@ with tab1:
 
 with tab2:
     st.subheader("🖼️ Vérifier une Image")
+    st.write("Utilisez ces outils pour effectuer une recherche inversée :")
     c1, c2, c3 = st.columns(3)
     c1.link_button("Google Lens", "https://lens.google.com/")
     c2.link_button("TinEye", "https://tineye.com/")
@@ -82,6 +79,9 @@ with tab2:
 
 with tab3:
     st.subheader("ℹ️ Méthode : Le Doute Méthodique")
-    st.write("1. **Croisez** : Ne jamais se fier à une seule source.")
-    st.write("2. **Identifiez** : Qui publie ? Est-ce une source primaire ?")
-    st.write("3. **Analysez** : Est-ce une information ou une opinion ?")
+    st.markdown("""
+    1. **Croisez les sources** : Une seule source ne suffit jamais pour confirmer une information.
+    2. **Identifiez l'auteur** : Qui publie ? Est-ce un site officiel, un média reconnu, ou un compte anonyme ?
+    3. **Analysez la tonalité** : Une information factuelle est neutre. Si le texte joue sur vos émotions (peur, colère), soyez extrêmement vigilant.
+    4. **Vérifiez la date** : Une information réelle peut devenir fausse si elle est sortie de son contexte temporel.
+    """)
