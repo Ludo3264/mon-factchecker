@@ -1,13 +1,15 @@
 import streamlit as st
 from groq import Groq
 
-# --- CONFIGURATION ---
-# Liens mis à jour pour une meilleure fiabilité
+# --- CONFIGURATION DES SOURCES ---
+# Liste élargie pour une couverture complète
 SEARCH_URLS = {
-    "AFP Factuel": "https://factuel.afp.com/?query=",
+    "AFP Factuel": "https://factuel.afp.com/search?query=",
     "Le Monde (Décodeurs)": "https://www.lemonde.fr/recherche/?search_keywords=",
     "Libération (CheckNews)": "https://www.liberation.fr/recherche/?q=",
-    "France Info (Vrai ou Fake)": "https://www.francetvinfo.fr/recherche/?search="
+    "France Info (Vrai ou Fake)": "https://www.francetvinfo.fr/recherche/?search=",
+    "Site Élysée": "https://www.elysee.fr/recherche?q=",
+    "Wikipedia": "https://fr.wikipedia.org/wiki/"
 }
 
 # --- LOGIQUE IA ---
@@ -15,12 +17,14 @@ def get_expert_analysis(query):
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     system_prompt = """
     Tu es un expert en fact-checking EMI. 
-    1. Analyse l'affirmation avec une rigueur journalistique.
-    2. Ne génère aucune information factuelle erronée (dates, titres, fonctions).
-    3. Structure ta réponse en 3 parties obligatoires :
-       - Faits observés (données biographiques ou factuelles vérifiables).
-       - Biais détectés (analyse de la nature de la rumeur).
-       - Méthodologie de vérification (conseils concrets pour l'élève).
+    1. Analyse l'affirmation avec une rigueur absolue.
+    2. Tu DOIS citer tes sources pour chaque point important (noms des médias, institutions).
+    3. Structure OBLIGATOIREMENT ta réponse en 4 sections :
+       - Faits observés : (avec preuves factuelles).
+       - Biais détectés : (analyse critique de la rumeur ou de l'affirmation).
+       - Méthodologie de vérification : (conseils concrets pour l'élève).
+       - Sources de référence : (liste des sources fiables consultées pour cette analyse).
+    4. Ne génère aucune information factuelle erronée. Si une info est incertaine, dis-le.
     """
     completion = client.chat.completions.create(
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": query}],
@@ -37,11 +41,9 @@ tab1, tab2, tab3 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une 
 with tab1:
     st.subheader("✍️ Analyseur Critique — Niveau Expert")
     
-    # Initialisation des états
     if 'analysis' not in st.session_state: st.session_state.analysis = None
     if 'show_verdict' not in st.session_state: st.session_state.show_verdict = False
-    if 'user_input' not in st.session_state: st.session_state.user_input = ""
-
+    
     user_input = st.text_input("Affirmation à disséquer :")
     
     if st.button("Lancer l'enquête"):
@@ -52,9 +54,12 @@ with tab1:
     
     if st.session_state.analysis:
         st.markdown("### 🔍 1. Enquêtez par vous-même")
-        cols = st.columns(len(SEARCH_URLS))
+        st.write("Utilisez ces sources de confiance pour vérifier les faits :")
+        
+        # Affichage de la liste complète des sites (en colonnes)
+        cols = st.columns(3)
         for i, (name, base_url) in enumerate(SEARCH_URLS.items()):
-            cols[i].link_button(name, f"{base_url}{st.session_state.user_input.replace(' ', '+')}")
+            cols[i % 3].link_button(name, f"{base_url}{st.session_state.user_input.replace(' ', '+')}")
             
         st.markdown("---")
         st.subheader("📝 2. Bilan de ma recherche")
@@ -76,10 +81,9 @@ with tab1:
                 st.subheader("🤖 Analyse de l'expert (IA)")
                 st.write(st.session_state.analysis)
 
-# (Onglets 2 et 3 inchangés)
+# Onglets 2 et 3 inchangés
 with tab2:
     st.subheader("🖼️ Vérifier une Image")
-    st.write("Utilisez ces outils pour effectuer une recherche inversée :")
     col1, col2, col3 = st.columns(3)
     col1.link_button("Google Lens", "https://lens.google.com/")
     col2.link_button("TinEye", "https://tineye.com/")
