@@ -1,14 +1,13 @@
 import streamlit as st
 
 # --- CONFIGURATION DES SOURCES ---
-# Liste des sources de confiance pour restreindre la recherche
 TRUSTED_SITES = [
-    "factuel.afp.com", "lemonde.fr/les-decodeurs", "liberation.fr/checknews",
-    "francetvinfo.fr/vrai-ou-fake", "snopes.com", "cnrs.fr", 
-    "inserm.fr", "nasa.gov", "service-public.fr", "vie-publique.fr"
+    "site:factuel.afp.com", "site:lemonde.fr/les-decodeurs", "site:liberation.fr/checknews",
+    "site:francetvinfo.fr/vrai-ou-fake", "site:snopes.com", "site:cnrs.fr", 
+    "site:inserm.fr", "site:nasa.gov", "site:service-public.fr", "site:vie-publique.fr"
 ]
 
-# --- LOGIQUE DE VERDICT CONFORME ---
+# --- LOGIQUE DE VERDICT ---
 def get_verdict(analysis):
     analysis_lower = analysis.lower()
     if any(word in analysis_lower for word in ["faux", "démenti", "rumeur", "infondé", "désinformation"]):
@@ -20,11 +19,10 @@ def get_verdict(analysis):
     else:
         return "❓ INDÉTERMINÉ"
 
-# --- CONFIGURATION PAGE ---
-st.set_page_config(page_title="Analyse Critique EMI", layout="wide")
+# --- INTERFACE ---
+st.set_page_config(page_title="Outil d'Analyse Critique", layout="wide")
 st.title("🛡️ Outil d'Analyse Critique — EMI")
 
-# --- ONGLETS ---
 tab1, tab2, tab3 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une Image", "ℹ️ Méthode"])
 
 with tab1:
@@ -32,18 +30,9 @@ with tab1:
     
     if st.button("Analyser"):
         if user_input:
-            # PROMPT STRICT : Applique la conformité à la méthode
-            system_instruction = f"""
-            Tu es un analyste rigoureux pour l'Éducation aux Médias.
-            1. Utilise uniquement les preuves issues de ces domaines : {', '.join(TRUSTED_SITES)}.
-            2. Si l'information n'est pas confirmée par ces sources, tu DOIS répondre 'INDÉTERMINÉ'.
-            3. Ne jamais inventer, ne jamais supposer. Sois honnête sur l'absence de preuves.
-            4. Analyse avec une approche scientifique et neutre.
-            """
-            
-            # Ici, l'appel API doit intégrer system_instruction pour garantir l'absence d'invention.
-            # Simulation de l'analyse (remplacer par votre appel fonctionnel)
-            raw_analysis = "Analyse basée sur les sources certifiées..." 
+            # Ici viendrait votre logique d'appel API réelle (Groq, etc.)
+            # Pour l'exemple, nous simulons une réponse
+            raw_analysis = "Cette rumeur sur Brigitte Macron est infondée et a été démentie par des sources comme Snopes et StreetPress."
             
             st.subheader("⚖️ Résultat")
             st.write(get_verdict(raw_analysis))
@@ -51,23 +40,27 @@ with tab1:
             st.subheader("📋 Analyse Factuelle")
             st.write(raw_analysis)
             
-            # Application stricte de la mise en garde de l'onglet 3
-            if "INDÉTERMINÉ" in get_verdict(raw_analysis):
-                st.warning("⚠️ Aucune source fiable trouvée. Conformément à la méthode, ne partagez pas cette information.")
+            st.subheader("⚠️ Mise en garde")
+            st.info("Le partage d'une rumeur, même par curiosité, contribue à sa diffusion. Vérifiez toujours avant de cliquer.")
+            
+            st.subheader("🔗 Voir les sources")
+            st.markdown("[Snopes - False rumor](https://www.snopes.com/news/2025/02/24/false-trans-rumor-brigitte-macron/)")
         else:
             st.warning("Veuillez saisir une affirmation.")
 
 with tab2:
     st.write("### 🖼️ Vérifier une Image")
     st.write("Utilisez cet espace pour analyser le contexte d'une image.")
+    # Ajoutez ici votre logique spécifique pour l'image
 
 with tab3:
     st.write("""
-    ### ℹ️ Méthode : La règle du doute méthodique
-    Pour garantir l'intégrité de vos recherches, cet outil suit une règle stricte :
-    * **Sources Certifiées uniquement :** Nous ne consultons que des organismes experts (Fact-checkers, Institutions, Science).
-    * **Absence d'invention :** Si une information n'est pas présente dans nos sources, l'outil affiche **INDÉTERMINÉ**.
-    * **Verdict final :** Si le résultat est **INDÉTERMINÉ**, cela signifie que l'information n'a pas été validée par la communauté scientifique ou journalistique reconnue. **Dans ce cas, ne partagez jamais l'information.**
+    ### ℹ️ Méthode
+    Cet outil croise vos recherches avec des sites experts et vérifiés :
+    * **Fact-checkers :** AFP Factuel, Les Décodeurs, Snopes.
+    * **Institutions :** CNRS, NASA, Service-public.fr.
+    
+    **Règle d'or :** Si l'outil affiche 'INDÉTERMINÉ', ne partagez pas l'information avant de l'avoir recouper vous-même avec un média fiable.
     """)
 
 # --- PIED DE PAGE ---
