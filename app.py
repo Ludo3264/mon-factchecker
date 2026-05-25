@@ -16,7 +16,9 @@ TRUSTED_SITES = [
 
 def search_trusted_sources(claim: str) -> tuple[list[dict], str]:
     query_sites = " OR ".join(TRUSTED_SITES)
-    search_query = f"{claim} ({query_sites})"
+    # Réinsertion du filtre -filetype:pdf pour exclure les documents et rester sur les articles
+    search_query = f"{claim} ({query_sites}) -filetype:pdf"
+    
     try:
         search = GoogleSerperAPIWrapper(serper_api_key=st.secrets["SERPER_API_KEY"], gl="fr", hl="fr")
         results = search.results(search_query)
@@ -28,18 +30,16 @@ def search_trusted_sources(claim: str) -> tuple[list[dict], str]:
         title, link, snippet = res.get("title", "Sans titre"), res.get("link", ""), res.get("snippet", "")
         sources_list.append({"title": title, "link": link, "snippet": snippet})
         formatted.append(f"- {title}\n  URL : {link}\n  Extrait : {snippet}")
-    return sources_list, "\n\n".join(formatted) if formatted else "Aucune source trouvée."
+    return sources_list, "\n\n".join(formatted) if formatted else "Aucune source web trouvée."
 
 # ==============================================================================
-# LOGIQUE D'ANALYSE (Prompt renforcé pour la pertinence)
+# LOGIQUE D'ANALYSE
 # ==============================================================================
 ANALYSIS_TEMPLATE = """Tu es un assistant pédagogique en Éducation aux Médias (EMI).
 
 RÈGLES IMPÉRATIVES :
-1. ANALYSE CRITIQUE : Utilise UNIQUEMENT les sources fournies qui sont PERTINENTES.
-   - SI UNE SOURCE N'A AUCUN RAPPORT DIRECT AVEC L'AFFIRMATION, ÉCARTE-LA TOTALEMENT et signale-le.
-   - Ne cherche pas à lier des documents PDF ou des articles hors sujet à l'affirmation.
-2. DISTINCTION : Si une source contredit l'autre, expose clairement la contradiction.
+1. ANALYSE CRITIQUE : Utilise UNIQUEMENT les articles web fournis. Écarte tout document hors sujet.
+2. DISTINCTION : Si les articles se contredisent, expose clairement la contradiction.
 3. CONNAISSANCE EXTERNE : Si tu utilises une info hors sources, précise "Connaissance externe".
 
 SOURCES : {context}
@@ -49,7 +49,7 @@ RÉPONDRE SELON CE PLAN :
 ## 🔎 ÉVALUATION PRÉLIMINAIRE
 Commence par : VRAI, FAUX, NUANCÉ ou INDÉTERMINÉ (en majuscules), suivi de 2 lignes de justification.
 ## 📋 ANALYSE FACTUELLE
-Détaille les preuves trouvées uniquement dans les sources pertinentes. Si rien n'est pertinent, dis-le.
+Détaille les preuves trouvées dans les articles.
 ## ❓ QUESTIONS À SE POSER
 3 à 5 questions critiques pour l'élève.
 ## 🧭 PISTE DE VÉRIFICATION
@@ -69,7 +69,7 @@ def display_verdict(text: str):
     st.markdown(f'<div style="background:{bg};color:{fg};padding:10px;border-radius:5px;font-weight:bold;display:inline-block;">{verdict}</div>', unsafe_allow_html=True)
 
 # ==============================================================================
-# INTERFACE
+# INTERFACE (Identique à votre structure)
 # ==============================================================================
 st.set_page_config(page_title="Fact-Checking EMI", page_icon="🛡️", layout="wide")
 st.title("🛡️ Outil d'Analyse Critique — EMI")
@@ -91,25 +91,14 @@ with tab1:
 
 with tab2:
     st.markdown("#### Traquer l'origine d'une image")
-    st.markdown("Utilisez au moins deux outils et comparez les résultats.")
-    image_url = st.text_input("Collez l'URL de l'image :", placeholder="https://exemple.com/image.jpg")
+    image_url = st.text_input("Collez l'URL de l'image :")
     if image_url:
         encoded_url = urllib.parse.quote_plus(image_url)
-        st.markdown("##### 🔍 Recherche inversée par URL")
-        col1, col2, col3 = st.columns(3)
-        with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", use_container_width=True)
-        with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
-        with col3: st.link_button("🔎 Bing Visual", f"https://www.bing.com/images/search?q=imgurl:{encoded_url}&view=detailv2&iss=sbi", use_container_width=True)
-    st.markdown("---")
-    st.markdown("##### 📱 Depuis un fichier local")
-    c1, c2, c3 = st.columns(3)
-    with c1: st.link_button("📸 Google Lens", "https://lens.google.com", use_container_width=True)
-    with c2: st.link_button("🤖 TinEye", "https://tineye.com", use_container_width=True)
-    with c3: st.link_button("🔎 Bing Visual", "https://www.bing.com/images/", use_container_width=True)
-    st.markdown("---")
-    st.markdown("##### 💡 Que chercher lors d'une recherche inversée ?")
-    st.markdown("""- **Date de première apparition** : l'image est-elle plus ancienne que le contexte présenté ?\n- **Contexte d'origine** : à quel événement réel est-elle liée ?\n- **Modifications** : la version circulant est-elle identique à l'originale ?\n- **Sources qui la relaient** : quels types de sites la partagent ?""")
+        c1, c2, c3 = st.columns(3)
+        with c1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", use_container_width=True)
+        with c2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
+        with c3: st.link_button("🔎 Bing Visual", f"https://www.bing.com/images/search?q=imgurl:{encoded_url}", use_container_width=True)
 
 with tab3:
     st.markdown("#### Comment fonctionne cet outil ?")
-    st.markdown("""**1. Recherche dans des sources de confiance (Serper API)**\nRequête restreinte à des sites de fact-checking reconnus (AFP Factuel, Les Décodeurs, CheckNews, Snopes…). Les URLs retournées sont **réelles** — pas générées par une IA.\n\n**2. Analyse par un LLM (Groq / LLaMA 3.1)**\nLe modèle reçoit uniquement les extraits trouvés à l'étape 1. Il est instruit de ne pas inventer de sources et de signaler les incertitudes. Son rôle est pédagogique : poser des questions, pas trancher.\n\n**3. Affichage différencié**\nSources réelles (Serper) et analyse LLM sont affichées séparément.\n\n---\n#### Limites\n- Les sources peuvent ne pas avoir traité le sujet → "Indéterminé" est une réponse normale et honnête.\n- Le LLM peut mal interpréter les extraits.\n- Un résultat "VRAI" ne dispense pas de vérifier soi-même.\n\n---\n#### Ressources EMI\n- [CLEMI](https://www.clemi.fr) · [AFP Factuel](https://factuel.afp.com) · [Méthode SIFT](https://hapgood.us/2019/06/19/sift-the-four-moves/)""")
+    st.markdown("Cet outil recherche des articles de fact-checking reconnus et propose une analyse structurée pour développer l'esprit critique.")
