@@ -74,7 +74,7 @@ def executer_fact_checking(claim: str, context_sources: str) -> str:
 # ==============================================================================
 st.set_page_config(page_title="Fact-Checking Global", page_icon="🛡️", layout="centered")
 
-st.markdown('<p style="font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;">🛡️ Outil de Fact-Checking Global & EMI</p>', unsafe_allow_html=True)
+st.markdown('<p style="font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;">🛡️ Outil de Fact-Checking</p>', unsafe_allow_html=True)
 st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Version spécialisée (Texte & Image)</p>', unsafe_allow_html=True)
 
 # Nous n'avons plus que 2 onglets
