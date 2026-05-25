@@ -24,7 +24,7 @@ TRUSTED_SITES = [
 search_query_restriction = " OR ".join(TRUSTED_SITES)
 
 # ==============================================================================
-# LOGIQUE MÉTIER TEXTE (Mise à jour pour plus de précision)
+# LOGIQUE MÉTIER TEXTE
 # ==============================================================================
 def search_trusted_sources(claim: str) -> str:
     try:
@@ -34,7 +34,6 @@ def search_trusted_sources(claim: str) -> str:
     except Exception as e:
         return f"Erreur moteur de recherche : {str(e)}"
 
-# Template mis à jour : exigence de média, titre et structure
 template = """Tu es un expert en fact-checking. Ton rôle est de vérifier l'affirmation en te basant EXCLUSIVEMENT sur les extraits fournis.
 
 RÈGLES DE RÉPONSE STRICTES :
@@ -42,7 +41,7 @@ RÈGLES DE RÉPONSE STRICTES :
 2. Si l'info est vérifiée, structure ainsi :
    - VERDICT : VRAI / FAUX / NUANCÉ
    - EXPLICATION : Résumé factuel de la situation.
-   - SOURCE : Cite le NOM DU MÉDIA (ex: CheckNews, AFP, Le Monde).
+   - SOURCE : Identifie le nom du média (ex: Le Monde, AFP, Libération) en te basant sur le contexte ou l'URL. Si le nom n'est pas explicite, indique le nom du domaine source le plus probable.
    - TITRE DE RÉFÉRENCE : Donne le TITRE de l'article trouvé dans le texte si disponible.
 3. Ne jamais utiliser de connaissances externes.
 4. Si les sources sont en anglais, traduis le résultat en français.
