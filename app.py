@@ -24,7 +24,7 @@ TRUSTED_SITES = [
 search_query_restriction = " OR ".join(TRUSTED_SITES)
 
 # ==============================================================================
-# LOGIQUE MÉTIER TEXTE
+# LOGIQUE MÉTIER TEXTE (Mise à jour avec exigence de citation)
 # ==============================================================================
 def search_trusted_sources(claim: str) -> str:
     try:
@@ -34,25 +34,28 @@ def search_trusted_sources(claim: str) -> str:
     except Exception as e:
         return f"Erreur moteur de recherche : {str(e)}"
 
+# Template mis à jour pour structurer la réponse et exiger la source
 template = """Tu es un expert en fact-checking de niveau international.
-Ton rôle unique est de vérifier l'affirmation d'un utilisateur en te basant EXCLUSIVEMENT sur les extraits de presse fournis ci-dessous.
+Ton rôle est de vérifier l'affirmation fournie en te basant EXCLUSIVEMENT sur les extraits de presse ci-dessous.
 
-RÈGLES CRITIQUES :
-1. Si les extraits de presse ne permettent pas de prouver si l'info est vraie ou fausse, réponds EXACTEMENT : 
-   "Je ne trouve aucune vérification de cette information dans les sources officielles de fact-checking."
-2. Interdiction d'utiliser tes propres connaissances si les extraits n'en parlent pas.
-3. Si la réponse y est, commence par le verdict (VRAI, FAUX, ou NUANCÉ) et cite le média source.
-4. Traduis ou résume en français si la source trouvée est en anglais.
+RÈGLES DE RÉPONSE STRICTES :
+1. Si l'information n'est pas vérifiable via les extraits, réponds : "Je ne trouve aucune vérification dans les sources officielles."
+2. Si l'information est vérifiée, structure ta réponse comme suit :
+   - VERDICT : (VRAI / FAUX / NUANCÉ)
+   - EXPLICATION : Résume brièvement la situation en expliquant pourquoi.
+   - SOURCE : Cite précisément le média source parmi ceux fournis dans le contexte.
+3. Ne cite jamais tes propres connaissances.
+4. Si les sources sont en anglais, traduis le résultat en français.
 
 ---
-EXTRAITS DE PRESSE SÉLECTIONNÉS :
+EXTRAITS DE PRESSE FOURNIS :
 {context}
 ---
 
 AFFIRMATION À ANALYSER :
 {claim}
 
-VERDICT :"""
+RÉPONSE :"""
 
 prompt = PromptTemplate.from_template(template)
 
@@ -77,15 +80,12 @@ st.set_page_config(page_title="Fact-Checking Global", page_icon="🛡️", layou
 st.markdown('<p style="font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;">🛡️ Outil de Fact-Checking</p>', unsafe_allow_html=True)
 st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Version spécialisée (Texte & Image)</p>', unsafe_allow_html=True)
 
-# Nous n'avons plus que 2 onglets
 tab1, tab2 = st.tabs([
     "✍️ Vérifier un Texte", 
     "🖼️ Vérifier une Image (Recherche Inversée)"
 ])
 
-# ==============================================================================
 # ONGLET 1
-# ==============================================================================
 with tab1:
     user_claim = st.text_area("Saisissez l'affirmation à vérifier :", placeholder="Exemple : Une rumeur internationale dit que...", height=100)
     if st.button("Lancer la vérification", type="primary"):
@@ -96,43 +96,28 @@ with tab1:
                 sources_text = search_trusted_sources(user_claim)
             with st.spinner("🤖 Analyse critique multilingue par l'IA..."):
                 resultat_verdict = executer_fact_checking(user_claim, sources_text)
+            
             st.markdown('<p style="font-size:1.3rem; font-weight:bold; margin-top:20px;">⚖️ Analyse et conclusions :</p>', unsafe_allow_html=True)
-            if "Je ne trouve aucune vérification" in resultat_verdict:
-                st.info(resultat_verdict)
-            else:
-                st.success(resultat_verdict)
+            st.write(resultat_verdict)
+            
             with st.expander("🔗 Consulter les extraits de presse bruts (Monde)"):
                 st.write(sources_text)
 
-# ==============================================================================
-# ONGLET 2 : RECHERCHE D'IMAGE INVERSÉE (Version définitive, sans Yandex)
-# ==============================================================================
+# ONGLET 2
 with tab2:
     st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Traquer l\'origine d\'une image</p>', unsafe_allow_html=True)
-    st.write("Utilisez les outils ci-dessous pour vérifier si une image a été détournée ou utilisée hors contexte.")
-    
     image_url = st.text_input("Collez l'URL de l'image :", placeholder="https://exemple.com/image.jpg", key="url_mode")
-    
     if image_url:
         try:
             st.image(image_url, caption="Image soumise via URL", width=300)
             encoded_url = urllib.parse.quote_plus(image_url)
-            
-            # Utilisation exclusive d'outils basés sur des infrastructures neutres/fiables
             col1, col2 = st.columns(2)
-            with col1: 
-                st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", type="primary", use_container_width=True)
-            with col2: 
-                st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
+            with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", type="primary", use_container_width=True)
+            with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
         except Exception:
-            st.error("Impossible d'afficher cette image. Vérifiez que le lien est correct.")
-
+            st.error("Impossible d'afficher cette image.")
     st.markdown("---")
     st.markdown("#### 📱 Option : Vous avez enregistré l'image sur votre appareil")
     col_up1, col_up2 = st.columns(2)
-    with col_up1: 
-        st.link_button("📸 Uploader sur Google Lens officiel", "https://lens.google.com", use_container_width=True)
-    with col_up2: 
-        st.link_button("🤖 Uploader sur TinEye officiel", "https://tineye.com", use_container_width=True)
-        
-    st.caption("💡 Astuce : En cas de doute sur une photo, la recherche inversée permet souvent de retrouver la source originale et de comparer les dates.")
+    with col_up1: st.link_button("📸 Uploader sur Google Lens officiel", "https://lens.google.com", use_container_width=True)
+    with col_up2: st.link_button("🤖 Uploader sur TinEye officiel", "https://tineye.com", use_container_width=True)
