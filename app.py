@@ -8,7 +8,7 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
 # ==============================================================================
-# CONFIGURATION DES SOURCES
+# CONFIGURATION DES SOURCES (Un site par ligne)
 # ==============================================================================
 TRUSTED_SITES = [
     "site:factuel.afp.com",
@@ -23,92 +23,63 @@ TRUSTED_SITES = [
 ]
 search_query_restriction = " OR ".join(TRUSTED_SITES)
 
-# ==============================================================================
-# LOGIQUE MÉTIER TEXTE
-# ==============================================================================
 def search_trusted_sources(claim: str) -> str:
     try:
         search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-        full_query = f"({claim}) ({search_query_restriction})"
-        return search.run(full_query)
+        return search.run(f"({claim}) ({search_query_restriction})")
     except Exception as e:
-        return f"Erreur moteur de recherche : {str(e)}"
+        return f"Erreur : {str(e)}"
 
-# Nouveau Template orienté Analyse Cognitive
+# ==============================================================================
+# TEMPLATE D'ANALYSE (Rigueur maximale)
+# ==============================================================================
 template = """Tu es un expert en éducation aux médias (EMI). Analyse l'affirmation et les extraits fournis.
 
-RÈGLES D'ANALYSE :
-1. VERDICT : VRAI / FAUX / NUANCÉ.
-2. FAITS : Quels sont les éléments factuels vérifiables ?
-3. OPINIONS & RUMEURS : Identifie ce qui relève de l'interprétation, du ressenti ou de la rumeur non sourcée.
-4. MÉCANISMES À L'OEUVRE : Identifie si les extraits présentent :
-   - Un BIAIS COGNITIF (ex: biais de confirmation, effet de halo).
-   - Une tentative d'enfermement dans une BULLE DE FILTRES (ex: ton émotionnel, polarisation).
-   - Une structure de RUMEUR (ex: absence de preuve, appel à l'émotion).
-5. SOURCE : Identifie le média.
-6. TITRE : Donne le titre si disponible, sinon "Non disponible".
+RÈGLES D'ANALYSE PRIORITAIRES :
+1. VÉRITÉ FACTUELLE : Un fait largement documenté (ex: orientation sexuelle, fonctions officielles) DOIT être classé comme FAIT ÉTABLI et ne jamais être remis en cause.
+2. VERDICT : VRAI / FAUX / NUANCÉ. Le verdict doit refléter la véracité du fait principal.
+3. STRUCTURE DE RÉPONSE :
+   - FAITS ÉTABLIS : Liste les points factuels indiscutables.
+   - ANALYSE DES INTERPRÉTATIONS/DÉBATS : Identifie les opinions, polémiques ou rumeurs. Explique pourquoi ce ne sont pas des faits.
+   - MÉCANISMES DE MANIPULATION : Détecte biais ou rumeurs uniquement sur les points polémiques.
+   - SOURCE & TITRE : Cite précisément les sources et les titres.
+4. Ne jamais utiliser de connaissances externes.
 
 ---
-EXTRAITS DE PRESSE FOURNIS :
-{context}
+EXTRAITS : {context}
 ---
-
-AFFIRMATION À ANALYSER :
-{claim}
-
+AFFIRMATION : {claim}
 RÉPONSE :"""
 
-prompt = PromptTemplate.from_template(template)
-
 def executer_fact_checking(claim: str, context_sources: str) -> str:
-    try:
-        llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
-        fact_check_chain = (
-            {"context": RunnablePassthrough(), "claim": RunnablePassthrough()}
-            | prompt
-            | llm
-            | StrOutputParser()
-        )
-        return fact_check_chain.invoke({"context": context_sources, "claim": claim})
-    except Exception as e:
-        return f"Erreur d'analyse : {str(e)}"
+    llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
+    chain = ({"context": RunnablePassthrough(), "claim": RunnablePassthrough()} 
+             | PromptTemplate.from_template(template) | llm | StrOutputParser())
+    return chain.invoke({"context": context_sources, "claim": claim})
 
 # ==============================================================================
-# INTERFACE UTILISATEUR
+# INTERFACE
 # ==============================================================================
-st.set_page_config(page_title="Fact-Checking EMI", page_icon="🛡️", layout="centered")
+st.set_page_config(page_title="Fact-Checking EMI", page_icon="🛡️")
+st.title("🛡️ Outil d'Analyse Critique (EMI)")
 
-st.markdown('<p style="font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;">🛡️ Outil d\'Analyse Cognitive (EMI)</p>', unsafe_allow_html=True)
-st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Décomposition des faits, biais et rumeurs</p>', unsafe_allow_html=True)
+tab1, tab2 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une Image"])
 
-tab1, tab2 = st.tabs([
-    "✍️ Vérifier un Texte", 
-    "🖼️ Vérifier une Image"
-])
-
-# ONGLET 1
 with tab1:
-    user_claim = st.text_area("Saisissez l'affirmation à analyser :", height=100)
-    if st.button("Lancer l'analyse critique", type="primary"):
-        if not user_claim.strip():
-            st.warning("⚠️ Saisissez du texte.")
-        else:
-            with st.spinner("🔍 Recherche et analyse en cours..."):
-                sources_text = search_trusted_sources(user_claim)
-                resultat_analyse = executer_fact_checking(user_claim, sources_text)
-            
-            st.markdown('<p style="font-size:1.3rem; font-weight:bold; margin-top:20px;">⚖️ Résultats de l\'analyse EMI :</p>', unsafe_allow_html=True)
-            st.write(resultat_analyse)
-            st.info("💡 **Défi pédagogique :** Identifiez le mécanisme de manipulation détecté (Biais, Bulle, Rumeur) et débattez : pourquoi l'auteur a-t-il utilisé ce levier plutôt qu'un argument factuel ?")
-            
-            with st.expander("🔗 Voir les sources brutes"):
-                st.write(sources_text)
+    user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
+    if st.button("Lancer l'analyse"):
+        sources = search_trusted_sources(user_claim)
+        resultat = executer_fact_checking(user_claim, sources)
+        st.markdown("### ⚖️ Analyse rigoureuse")
+        st.write(resultat)
+        st.info("💡 **Note pédagogique :** Le 'Fait Établi' est votre ancrage. Tout ce qui est en dessous sert à analyser comment le débat essaie de transformer ou manipuler cette vérité.")
+        with st.expander("🔗 Voir les sources brutes"):
+            st.write(sources)
 
-# ONGLET 2
 with tab2:
-    st.markdown("### 🖼️ Traçage d'image")
-    image_url = st.text_input("URL de l'image :")
-    if image_url:
+    st.write("Outils de recherche inversée :")
+    img_url = st.text_input("URL de l'image :")
+    if img_url:
         col1, col2 = st.columns(2)
-        with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={urllib.parse.quote_plus(image_url)}", use_container_width=True)
-        with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={urllib.parse.quote_plus(image_url)}", use_container_width=True)
+        with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={urllib.parse.quote_plus(img_url)}")
+        with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={urllib.parse.quote_plus(img_url)}")
