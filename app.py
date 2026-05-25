@@ -108,52 +108,55 @@ with tab1:
                 st.write(sources_text)
 
 # ==============================================================================
-# ONGLET 2 : AJOUT DE LA RECHERCHE D'IMAGE INVERSÉE (Le laboratoire EMI)
+# ONGLET 2 : AJOUT DE LA RECHERCHE D'IMAGE INVERSÉE (Version Optimisée Atelier)
 # ==============================================================================
 with tab2:
     st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Traquer l\'origine d\'une image ou d\'une photo</p>', unsafe_allow_html=True)
     st.write("**Objectif pédagogique :** Apprendre à vérifier si une image n'est pas périmée, détournée ou modifiée.")
     
+    # --- OPTION A : L'IMAGE VIENT DU WEB ---
+    st.markdown("---")
+    st.markdown("#### 🌐 Option 1 : L'image est déjà sur Internet")
     image_url = st.text_input(
-        "Collez l'URL de l'image à vérifier (clic droit sur une image du web -> 'Copier le lien de l'image') :", 
-        placeholder="https://exemple.com/image.jpg"
+        "Collez l'URL de l'image (clic droit sur une image du web -> 'Copier le lien de l'image') :", 
+        placeholder="https://exemple.com/image.jpg",
+        key="url_mode"
     )
     
     if image_url:
         try:
-            # Affichage visuel de la photo soumise
-            st.image(image_url, caption="Image soumise à l'analyse", width=350)
-            
-            # Encodage propre de l'URL pour la compatibilité des liens
+            st.image(image_url, caption="Image soumise via URL", width=300)
             encoded_url = urllib.parse.quote_plus(image_url)
             
-            # Liens vers la boîte à outils universelle des fact-checkers
             lens_url = f"https://lens.google.com/uploadbyurl?url={encoded_url}"
             tineye_url = f"https://tineye.com/search/?url={encoded_url}"
             yandex_url = f"https://yandex.com/images/search?rpt=imageview&url={encoded_url}"
             
-            st.markdown('<p style="font-size:1.1rem; font-weight:bold; margin-top:15px;">🔍 Outils de recherche inversée à activer :</p>', unsafe_allow_html=True)
-            st.info("Le clic sur un bouton ouvrira automatiquement les résultats dans un nouvel onglet.")
-            
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.link_button("👁️ Google Lens", lens_url, type="primary", use_container_width=True)
-                st.caption("Idéal pour identifier des objets, monuments ou traduire du texte présent dans l'image.")
-                
+                st.link_button("👁️ Google Lens (URL)", lens_url, type="primary", use_container_width=True)
             with col2:
-                st.link_button("🤖 TinEye", tineye_url, use_container_width=True)
-                st.caption("Le meilleur pour trouver la **date d'apparition la plus ancienne** et détecter les montages.")
-                
+                st.link_button("🤖 TinEye (URL)", tineye_url, use_container_width=True)
             with col3:
-                st.link_button("🇷🇺 Yandex Images", yandex_url, use_container_width=True)
-                st.caption("Redoutable pour la reconnaissance faciale dans une foule et les paysages extérieurs.")
-                
-            st.markdown("""
-            ---
-            ### 💡 Astuces d'animation pour l'atelier :
-            * **Piste 1 (Chronologie) :** Demandez aux usagers de trier les résultats de **TinEye** par "Oldest" (Le plus ancien). C'est le moyen le plus rapide de prouver qu'une photo liée à une actualité récente circule en réalité depuis des années.
-            * **Piste 2 (Comparaison) :** Faites observer que Google et Yandex ne trouvent pas la même chose, montrant ainsi qu'aucun algorithme n'est exhaustif.
-            """)
-            
+                st.link_button("🇷🇺 Yandex (URL)", yandex_url, use_container_width=True)
         except Exception:
-            st.error("Impossible d'afficher cette image. Assurez-vous que le lien se termine par une extension valide (.jpg, .png, .webp).")
+            st.error("Impossible d'afficher cette image. Vérifiez le lien.")
+
+    # --- OPTION B : L'IMAGE EST SUR LE TÉLÉPHONE / L'ORDINATEUR ---
+    st.markdown("---")
+    st.markdown("#### 📱 Option 2 : Vous avez enregistré l'image (Fichier / Galerie)")
+    st.write("Si l'image est enregistrée sur votre appareil (ou si vous voulez la prendre en photo en direct), utilisez les plateformes officielles :")
+    
+    col_up1, col_up2 = st.columns(2)
+    with col_up1:
+        st.link_button("📸 Uploader sur Google Lens officiel", "https://lens.google.com", use_container_width=True)
+        st.caption("Sur mobile, cliquez sur l'icône d'appareil photo pour envoyer une image de votre galerie ou prendre une photo en direct.")
+    with col_up2:
+        st.link_button("🤖 Uploader sur TinEye officiel", "https://tineye.com", use_container_width=True)
+        st.caption("Cliquez sur le bouton 'Upload' (flèche) pour envoyer votre fichier image.")
+
+    st.markdown("""
+    ---
+    ### 💡 Astuces d'animation pour l'atelier :
+    * **Le réflexe capture d'écran :** Apprenez aux élèves que si une image sur Instagram ou TikTok refuse de donner son URL, ils peuvent simplement faire une **capture d'écran**, utiliser l'**Option 2** et l'uploader directement sur le Google Lens officiel.
+    """)
