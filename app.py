@@ -3,9 +3,15 @@ from groq import Groq
 
 # --- CONFIGURATION ---
 TRUSTED_SITES = [
-    "factuel.afp.com", "lemonde.fr", "liberation.fr/checknews", 
-    "francetvinfo.fr/vrai-ou-fake", "snopes.com", "cnrs.fr", 
-    "service-public.fr", "meteofrance.com"
+    "factuel.afp.com", 
+    "lemonde.fr", 
+    "liberation.fr/checknews", 
+    "francetvinfo.fr/vrai-ou-fake", 
+    "snopes.com", 
+    "lejournal.cnrs.fr", 
+    "service-public.fr", 
+    "meteofrance.com",
+    "radiofrance.fr"
 ]
 
 def get_ai_analysis(query):
