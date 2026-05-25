@@ -10,21 +10,20 @@ from langchain_core.output_parsers import StrOutputParser
 # ==============================================================================
 TRUSTED_SITES = [
     "site:factuel.afp.com", "site:lemonde.fr/les-decodeurs", "site:liberation.fr/checknews",
-    "site:francetvinfo.fr/vrai-ou-fake", "site:factcheck.org", "site:fullfact.org",
-    "site:snopes.com", "site:reuters.com/fact-check"
+    "site:francetvinfo.fr/vrai-ou-fake"
 ]
 
 def search_trusted_sources(claim: str) -> str:
     search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-    # Recherche restreinte aux sites de presse et fact-checking généralistes
-    query = f'"{claim}" (site:liberation.fr OR site:lemonde.fr OR site:factuel.afp.com OR site:francetvinfo.fr)'
+    # Recherche plus large mais toujours confinée aux sites de confiance
+    query = f"{claim} ({' OR '.join(TRUSTED_SITES)})"
     results = search.results(query)
     
     formatted = []
-    for res in results.get("organic", [])[:3]:
+    for res in results.get("organic", [])[:4]:
         formatted.append(f"Source: {res.get('title')} | URL: {res.get('link')}\nExtrait: {res.get('snippet')}")
     
-    return "\n\n".join(formatted) if formatted else "Aucune source pertinente trouvée."
+    return "\n\n".join(formatted) if formatted else "Aucune source trouvée."
 
 # ==============================================================================
 # INTERFACE
@@ -38,14 +37,16 @@ with tab1:
     user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
     if st.button("Lancer l'analyse textuelle"):
         sources = search_trusted_sources(user_claim)
+        
+        # Le template a été renforcé pour traiter les faits biographiques avec assurance
         template = """Tu es un expert en fact-checking.
         
         RÈGLES :
-        1. VERDICT : VRAI, FAUX ou NUANCÉ en premier.
-        2. ANALYSE : Appuie-toi uniquement sur les sources de presse fournies. 
-        3. TRAÇABILITÉ : Cite les URLs pour chaque fait.
+        1. VERDICT : Affiche VRAI, FAUX ou NUANCÉ.
+        2. ANALYSE : Si les sources fournies mentionnent des faits biographiques (ex: homosexualité, fonctions), traite-les comme des faits établis et reconnus publiquement. N'hésite pas à valider ces informations si elles apparaissent dans les extraits.
+        3. TRAÇABILITÉ : Cite impérativement l'URL de la source pour chaque fait cité.
         
-        SOURCES : {context}
+        SOURCES FOURNIES : {context}
         AFFIRMATION : {claim}"""
         
         llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
@@ -55,7 +56,7 @@ with tab1:
         st.markdown("### ⚖️ Résultat")
         st.write(resultat)
         st.markdown("---")
-        st.markdown("### 🔗 Sources")
+        st.markdown("### 🔗 Sources utilisées")
         st.write(sources)
 
 with tab2:
