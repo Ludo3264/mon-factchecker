@@ -1,8 +1,7 @@
 import streamlit as st
 from groq import Groq
 
-# --- CONFIGURATION ---
-# Liste des sources de référence pour contraindre l'IA
+# --- CONFIGURATION DES SOURCES ---
 TRUSTED_SITES = [
     "factuel.afp.com", "lemonde.fr", "liberation.fr/checknews", 
     "francetvinfo.fr/vrai-ou-fake", "snopes.com", "cnrs.fr", 
@@ -10,9 +9,7 @@ TRUSTED_SITES = [
 ]
 
 def get_ai_analysis(query):
-    """
-    Appel à l'API Groq avec instruction stricte de respecter la méthode
-    """
+    """Appel à l'API Groq avec le modèle stable."""
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     
     system_prompt = f"""
@@ -29,7 +26,7 @@ def get_ai_analysis(query):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Vérifie la véracité de cette affirmation : {query}"}
         ],
-        model="llama3-70b-8192",
+        model="llama-3.1-8b-instant",
     )
     return completion.choices[0].message.content
 
@@ -48,9 +45,8 @@ with tab1:
             with st.spinner("Analyse rigoureuse en cours..."):
                 try:
                     analysis = get_ai_analysis(user_input)
-                    
-                    # Extraction logique du verdict
                     st.subheader("⚖️ Résultat")
+                    
                     if "INDÉTERMINÉ" in analysis.upper():
                         st.write("❓ **INDÉTERMINÉ**")
                         st.warning("⚠️ Aucune source fiable trouvée. Conformément à la méthode, ne partagez pas cette information.")
@@ -69,28 +65,23 @@ with tab1:
 
 with tab2:
     st.subheader("🖼️ Vérifier une Image")
-    st.write("Utilisez ces outils pour effectuer une recherche inversée et vérifier l'origine d'une image :")
-    
+    st.write("Utilisez ces outils pour effectuer une recherche inversée :")
     col1, col2, col3 = st.columns(3)
-    with col1:
-        st.link_button("Google Lens", "https://lens.google.com/")
-    with col2:
-        st.link_button("TinEye", "https://tineye.com/")
-    with col3:
-        st.link_button("Bing Visual Search", "https://www.bing.com/visualsearch")
-        
+    col1.link_button("Google Lens", "https://lens.google.com/")
+    col2.link_button("TinEye", "https://tineye.com/")
+    col3.link_button("Bing Visual Search", "https://www.bing.com/visualsearch")
+    
     st.markdown("---")
-    img_input = st.text_input("Collez l'URL de l'image ici pour une analyse rapide :")
+    img_input = st.text_input("Collez l'URL de l'image ici :")
     if st.button("Analyser l'Image"):
         st.info("Recherche de similarité dans les bases de données en cours...")
 
 with tab3:
     st.subheader("ℹ️ Méthode : La règle du doute méthodique")
     st.write("""
-    Pour garantir l'intégrité de vos recherches, cet outil suit une règle stricte :
-    * **Sources Certifiées uniquement :** Nous ne consultons que des organismes experts (Fact-checkers, Institutions, Science).
-    * **Absence d'invention :** Si une information n'est pas présente dans nos sources, l'outil affiche **INDÉTERMINÉ**.
-    * **Verdict final :** Si le résultat est **INDÉTERMINÉ**, cela signifie que l'information n'a pas été validée par la communauté scientifique ou journalistique reconnue. **Dans ce cas, ne partagez jamais l'information.**
+    1. **Sources Certifiées uniquement :** AFP Factuel, Le Monde, Libération, CNRS, etc.
+    2. **Zéro invention :** Si l'information est absente de ces sources, l'outil affiche **INDÉTERMINÉ**.
+    3. **Action :** Si le résultat est **INDÉTERMINÉ**, l'information n'est pas fiable. **Ne la partagez pas.**
     """)
 
 st.markdown("---")
