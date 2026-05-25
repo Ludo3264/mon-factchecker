@@ -1,7 +1,7 @@
 import streamlit as st
 from groq import Groq
 
-# --- CONFIGURATION DES SOURCES ---
+# --- CONFIGURATION ---
 TRUSTED_SITES = [
     "factuel.afp.com", "lemonde.fr", "liberation.fr/checknews", 
     "francetvinfo.fr/vrai-ou-fake", "snopes.com", "cnrs.fr", 
@@ -9,23 +9,24 @@ TRUSTED_SITES = [
 ]
 
 def get_ai_analysis(query):
-    """Appel à l'API Groq avec instruction système améliorée."""
+    """Analyse via Groq avec moteur de vérification."""
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     
     system_prompt = f"""
     Tu es un expert en vérification de faits (Fact-checker) pour l'EMI.
     Règles strictes :
-    1. Si l'affirmation concerne une personnalité publique ou un fait historique, donne d'abord une définition factuelle courte et neutre basée sur tes connaissances générales avant d'analyser l'affirmation.
-    2. Base ton analyse de l'affirmation UNIQUEMENT sur ces sources : {', '.join(TRUSTED_SITES)}.
-    3. Si l'information est une rumeur démentie par ces sources, réponds 'FAUX' et cite le lien de l'article de démenti.
-    4. Si l'information n'est pas confirmée ou absente, réponds 'INDÉTERMINÉ'.
-    5. Ne jamais inventer. Cite tes sources avec des liens cliquables en markdown : [Titre](URL).
+    1. Si l'affirmation concerne une personnalité, donne d'abord une définition factuelle à jour.
+    2. Base ton analyse UNIQUEMENT sur ces sources : {', '.join(TRUSTED_SITES)}.
+    3. Si l'information est une rumeur ou fausse, réponds 'FAUX'.
+    4. Si l'information n'est pas confirmée, réponds 'INDÉTERMINÉ'.
+    5. Pour les sources, cite uniquement les pages d'accueil des sites de confiance suivants : {', '.join(TRUSTED_SITES)}.
+    6. Ne jamais inventer.
     """
     
     completion = client.chat.completions.create(
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Vérifie la véracité de cette affirmation : {query}"}
+            {"role": "user", "content": f"Vérifie cette affirmation : {query}"}
         ],
         model="llama-3.1-8b-instant",
     )
@@ -48,8 +49,7 @@ with tab1:
                     analysis = get_ai_analysis(user_input)
                     st.subheader("⚖️ Résultat")
                     
-                    # Logique de verdict basée sur le retour de l'IA
-                    if "FAUX" in analysis.upper() or "DÉMENTI" in analysis.upper():
+                    if "FAUX" in analysis.upper():
                         st.write("❌ **FAUX**")
                     elif "INDÉTERMINÉ" in analysis.upper():
                         st.write("❓ **INDÉTERMINÉ**")
@@ -61,18 +61,25 @@ with tab1:
                     st.markdown(analysis)
                     
                 except Exception as e:
-                    st.error(f"Erreur lors de l'analyse : {e}")
+                    st.error(f"Erreur technique : {e}")
         else:
             st.warning("Veuillez saisir une affirmation.")
+            
+    st.markdown("---")
+    st.write("### 🔍 Outils experts (pour vérifier vous-même) :")
+    col_a, col_b = st.columns(2)
+    col_a.link_button("Fact Check Explorer (Google)", "https://toolbox.google.com/factcheck/explorer")
+    col_b.link_button("CORTEX (Esprit critique)", "https://cortecs.org/")
 
 with tab2:
     st.subheader("🖼️ Vérifier une Image")
     st.write("Utilisez ces outils pour effectuer une recherche inversée :")
+    
     col1, col2, col3 = st.columns(3)
     col1.link_button("Google Lens", "https://lens.google.com/")
     col2.link_button("TinEye", "https://tineye.com/")
     col3.link_button("Bing Visual Search", "https://www.bing.com/visualsearch")
-    
+        
     st.markdown("---")
     img_input = st.text_input("Collez l'URL de l'image ici :")
     if st.button("Analyser l'Image"):
