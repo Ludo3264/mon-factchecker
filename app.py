@@ -24,7 +24,7 @@ TRUSTED_SITES = [
 search_query_restriction = " OR ".join(TRUSTED_SITES)
 
 # ==============================================================================
-# LOGIQUE MÉTIER TEXTE (Mise à jour avec exigence de citation)
+# LOGIQUE MÉTIER TEXTE (Mise à jour pour plus de précision)
 # ==============================================================================
 def search_trusted_sources(claim: str) -> str:
     try:
@@ -34,17 +34,17 @@ def search_trusted_sources(claim: str) -> str:
     except Exception as e:
         return f"Erreur moteur de recherche : {str(e)}"
 
-# Template mis à jour pour structurer la réponse et exiger la source
-template = """Tu es un expert en fact-checking de niveau international.
-Ton rôle est de vérifier l'affirmation fournie en te basant EXCLUSIVEMENT sur les extraits de presse ci-dessous.
+# Template mis à jour : exigence de média, titre et structure
+template = """Tu es un expert en fact-checking. Ton rôle est de vérifier l'affirmation en te basant EXCLUSIVEMENT sur les extraits fournis.
 
 RÈGLES DE RÉPONSE STRICTES :
-1. Si l'information n'est pas vérifiable via les extraits, réponds : "Je ne trouve aucune vérification dans les sources officielles."
-2. Si l'information est vérifiée, structure ta réponse comme suit :
-   - VERDICT : (VRAI / FAUX / NUANCÉ)
-   - EXPLICATION : Résume brièvement la situation en expliquant pourquoi.
-   - SOURCE : Cite précisément le média source parmi ceux fournis dans le contexte.
-3. Ne cite jamais tes propres connaissances.
+1. Si l'info n'est pas vérifiable, réponds : "Je ne trouve aucune vérification dans les sources."
+2. Si l'info est vérifiée, structure ainsi :
+   - VERDICT : VRAI / FAUX / NUANCÉ
+   - EXPLICATION : Résumé factuel de la situation.
+   - SOURCE : Cite le NOM DU MÉDIA (ex: CheckNews, AFP, Le Monde).
+   - TITRE DE RÉFÉRENCE : Donne le TITRE de l'article trouvé dans le texte si disponible.
+3. Ne jamais utiliser de connaissances externes.
 4. Si les sources sont en anglais, traduis le résultat en français.
 
 ---
@@ -121,3 +121,4 @@ with tab2:
     col_up1, col_up2 = st.columns(2)
     with col_up1: st.link_button("📸 Uploader sur Google Lens officiel", "https://lens.google.com", use_container_width=True)
     with col_up2: st.link_button("🤖 Uploader sur TinEye officiel", "https://tineye.com", use_container_width=True)
+    st.caption("💡 Astuce : Utilisez le titre et la source fournis dans l'onglet 1 pour effectuer une recherche approfondie.")
