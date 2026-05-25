@@ -31,7 +31,6 @@ def get_expert_analysis(query):
     system_prompt = f"""
     Nous sommes le {current_date}. Tu es un expert EMI agissant comme un journaliste des 'Décodeurs'.
     RÈGLE : Utilise une approche rigoureuse. Recherche des preuves factuelles et institutionnelles.
-    Si tu confirmes une info, cite l'article source. Si c'est une rumeur, démontre pourquoi en citant des preuves.
     
     IMPORTANT : Si la question porte sur un événement survenu dans les dernières 48 heures, précise explicitement à l'utilisateur que tu n'as pas accès aux flux d'actualités en temps réel et qu'il est indispensable de vérifier les sites de presse spécialisés via les liens fournis.
     
@@ -67,7 +66,7 @@ with tab1:
             st.session_state.step = 1
 
     if st.session_state.get('step') == 1:
-        st.info("💡 **Astuce Vie Privée** : Faites un **clic-droit** sur les boutons ci-dessous > 'Ouvrir dans une fenêtre de navigation privée' pour protéger vos données.")
+        st.info("💡 **Astuce Vie Privée** : Faites un **clic-droit** sur les boutons ci-dessous > 'Ouvrir dans une fenêtre de navigation privée'.")
         
         st.markdown(f"### 🔍 Sources spécialisées ({st.session_state.cat})")
         cols = st.columns(len(SOURCES[st.session_state.cat]))
@@ -85,7 +84,16 @@ with tab1:
         user_bilan = st.text_area("Rédigez votre conclusion après consultation des sources :")
         
         if st.button("Comparer avec l'analyse experte"):
-            st.markdown(f"**Analyse :**\n{st.session_state.analysis}")
+            analysis = st.session_state.analysis
+            if "[FAUX]" in analysis.upper(): color = "#ff5252"
+            elif "[VRAI]" in analysis.upper(): color = "#4caf50"
+            else: color = "#ff9800"
+            
+            c1, c2 = st.columns(2)
+            c1.markdown(f"""<div style="background-color: #e3f2fd; padding: 15px; border-radius: 10px; border-left: 5px solid #2196f3;">
+                <h3 style="color: #1976d2;">👤 Votre Bilan</h3>{user_bilan}</div>""", unsafe_allow_html=True)
+            c2.markdown(f"""<div style="background-color: {color}15; padding: 15px; border-radius: 10px; border-left: 5px solid {color};">
+                <h3 style="color: {color};">🤖 Analyse de l'expert</h3>{analysis.replace('[VRAI]', '').replace('[FAUX]', '').replace('[INCERTAIN]', '')}</div>""", unsafe_allow_html=True)
 
 with tab2:
     st.subheader("🖼️ Vérifier une Image")
@@ -97,8 +105,7 @@ with tab2:
 with tab3:
     st.subheader("ℹ️ Méthode : Le Doute Méthodique")
     st.markdown("""
-    * **Clic-droit** : Utilisez toujours cette option pour ouvrir vos recherches en mode privé.
-    * **Temporalité** : L'IA ne connaît pas les événements des dernières 48h. Vérifiez toujours la presse en direct.
-    * **Croisez** : Ne vous fiez jamais à une source unique.
-    * **Institutions** : Priorisez les sites officiels (INSEE, Ministère, HCE) pour les sujets de société.
+    * **Confidentialité** : Utilisez le clic-droit pour ouvrir vos recherches en mode privé.
+    * **Temporalité** : L'IA est limitée sur les événements des dernières 48h. Vérifiez toujours la presse en direct.
+    * **Éthique** : Comparez toujours votre raisonnement avec les sources institutionnelles.
     """)
