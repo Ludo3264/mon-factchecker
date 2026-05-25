@@ -83,7 +83,9 @@ tab1, tab2 = st.tabs([
     "🖼️ Vérifier une Image (Recherche Inversée)"
 ])
 
+# ==============================================================================
 # ONGLET 1
+# ==============================================================================
 with tab1:
     user_claim = st.text_area("Saisissez l'affirmation à vérifier :", placeholder="Exemple : Une rumeur internationale dit que...", height=100)
     if st.button("Lancer la vérification", type="primary"):
@@ -102,22 +104,35 @@ with tab1:
             with st.expander("🔗 Consulter les extraits de presse bruts (Monde)"):
                 st.write(sources_text)
 
-# ONGLET 2
+# ==============================================================================
+# ONGLET 2 : RECHERCHE D'IMAGE INVERSÉE (Version définitive, sans Yandex)
+# ==============================================================================
 with tab2:
     st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Traquer l\'origine d\'une image</p>', unsafe_allow_html=True)
+    st.write("Utilisez les outils ci-dessous pour vérifier si une image a été détournée ou utilisée hors contexte.")
+    
     image_url = st.text_input("Collez l'URL de l'image :", placeholder="https://exemple.com/image.jpg", key="url_mode")
+    
     if image_url:
         try:
             st.image(image_url, caption="Image soumise via URL", width=300)
             encoded_url = urllib.parse.quote_plus(image_url)
-            col1, col2, col3 = st.columns(3)
-            with col1: st.link_button("👁️ Google Lens (URL)", f"https://lens.google.com/uploadbyurl?url={encoded_url}", type="primary", use_container_width=True)
-            with col2: st.link_button("🤖 TinEye (URL)", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
-            with col3: st.link_button("🇷🇺 Yandex (URL)", f"https://yandex.com/images/search?rpt=imageview&url={encoded_url}", use_container_width=True)
+            
+            # Utilisation exclusive d'outils basés sur des infrastructures neutres/fiables
+            col1, col2 = st.columns(2)
+            with col1: 
+                st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", type="primary", use_container_width=True)
+            with col2: 
+                st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
         except Exception:
-            st.error("Impossible d'afficher cette image.")
+            st.error("Impossible d'afficher cette image. Vérifiez que le lien est correct.")
+
     st.markdown("---")
-    st.markdown("#### 📱 Option 2 : Vous avez enregistré l'image")
+    st.markdown("#### 📱 Option : Vous avez enregistré l'image sur votre appareil")
     col_up1, col_up2 = st.columns(2)
-    with col_up1: st.link_button("📸 Uploader sur Google Lens officiel", "https://lens.google.com", use_container_width=True)
-    with col_up2: st.link_button("🤖 Uploader sur TinEye officiel", "https://tineye.com", use_container_width=True)
+    with col_up1: 
+        st.link_button("📸 Uploader sur Google Lens officiel", "https://lens.google.com", use_container_width=True)
+    with col_up2: 
+        st.link_button("🤖 Uploader sur TinEye officiel", "https://tineye.com", use_container_width=True)
+        
+    st.caption("💡 Astuce : En cas de doute sur une photo, la recherche inversée permet souvent de retrouver la source originale et de comparer les dates.")
