@@ -11,20 +11,18 @@ from langchain_core.output_parsers import StrOutputParser
 TRUSTED_SITES = [
     "site:factuel.afp.com", "site:lemonde.fr/les-decodeurs", "site:liberation.fr/checknews",
     "site:francetvinfo.fr/vrai-ou-fake", "site:factcheck.org", "site:fullfact.org",
-    "site:snopes.com", "site:reuters.com/fact-check", "site:euvsdisinfo.eu"
+    "site:snopes.com", "site:reuters.com/fact-check"
 ]
 
 def search_trusted_sources(claim: str) -> str:
     search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-    results = search.results(f"{claim} ({' OR '.join(TRUSTED_SITES)})")
+    # Recherche restreinte aux sites de presse et fact-checking généralistes
+    query = f'"{claim}" (site:liberation.fr OR site:lemonde.fr OR site:factuel.afp.com OR site:francetvinfo.fr)'
+    results = search.results(query)
     
     formatted = []
-    mots_cles = ["attal", "homosexuel", "premier ministre", "politique"]
-    
-    for res in results.get("organic", [])[:4]:
-        titre_snippet = (res.get('title', '') + res.get('snippet', '')).lower()
-        if sum(mot in titre_snippet for mot in mots_cles) >= 1:
-            formatted.append(f"Source: {res.get('title')} | URL: {res.get('link')}\nExtrait: {res.get('snippet')}")
+    for res in results.get("organic", [])[:3]:
+        formatted.append(f"Source: {res.get('title')} | URL: {res.get('link')}\nExtrait: {res.get('snippet')}")
     
     return "\n\n".join(formatted) if formatted else "Aucune source pertinente trouvée."
 
@@ -42,12 +40,12 @@ with tab1:
         sources = search_trusted_sources(user_claim)
         template = """Tu es un expert en fact-checking.
         
-        RÈGLES STRICTES :
-        1. VERDICT : Affiche VRAI, FAUX ou NUANCÉ en premier.
-        2. HIÉRARCHIE : Les faits biographiques notoires sont établis. Ne les remets jamais en doute.
-        3. TRAÇABILITÉ : Liste les sources utilisées avec leurs URLs.
+        RÈGLES :
+        1. VERDICT : VRAI, FAUX ou NUANCÉ en premier.
+        2. ANALYSE : Appuie-toi uniquement sur les sources de presse fournies. 
+        3. TRAÇABILITÉ : Cite les URLs pour chaque fait.
         
-        SOURCES FOURNIES : {context}
+        SOURCES : {context}
         AFFIRMATION : {claim}"""
         
         llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
@@ -57,7 +55,7 @@ with tab1:
         st.markdown("### ⚖️ Résultat")
         st.write(resultat)
         st.markdown("---")
-        st.markdown("### 🔗 Sources utilisées")
+        st.markdown("### 🔗 Sources")
         st.write(sources)
 
 with tab2:
@@ -70,7 +68,7 @@ with tab2:
         st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded}")
         st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded}")
     else:
-        st.info("Veuillez saisir une URL d'image ci-dessus pour activer les moteurs.")
+        st.info("Saisissez une URL pour activer les moteurs.")
             
     st.markdown("#### 2. Sources de confiance pour contexte")
     for site in TRUSTED_SITES:
