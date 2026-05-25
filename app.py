@@ -16,7 +16,9 @@ TRUSTED_SITES = [
 
 def search_trusted_sources(claim: str) -> tuple[list[dict], str]:
     query_sites = " OR ".join(TRUSTED_SITES)
-    search_query = f"{claim} ({query_sites}) -filetype:pdf"
+    # Utilisation des guillemets "" pour une recherche restrictive sur l'expression exacte
+    search_query = f'"{claim}" ({query_sites}) -filetype:pdf'
+    
     try:
         search = GoogleSerperAPIWrapper(serper_api_key=st.secrets["SERPER_API_KEY"], gl="fr", hl="fr")
         results = search.results(search_query)
@@ -28,17 +30,17 @@ def search_trusted_sources(claim: str) -> tuple[list[dict], str]:
         title, link, snippet = res.get("title", "Sans titre"), res.get("link", ""), res.get("snippet", "")
         sources_list.append({"title": title, "link": link, "snippet": snippet})
         formatted.append(f"- {title}\n  URL : {link}\n  Extrait : {snippet}")
-    return sources_list, "\n\n".join(formatted) if formatted else "Aucune source web trouvée."
+    return sources_list, "\n\n".join(formatted) if formatted else "Aucune source web pertinente trouvée pour cette affirmation précise."
 
 # ==============================================================================
-# LOGIQUE D'ANALYSE (Prompt avec clause d'exclusion stricte)
+# LOGIQUE D'ANALYSE (Prompt avec exclusion stricte)
 # ==============================================================================
 ANALYSIS_TEMPLATE = """Tu es un assistant pédagogique en Éducation aux Médias (EMI).
 
 RÈGLES IMPÉRATIVES :
 1. ANALYSE CRITIQUE : Utilise UNIQUEMENT les articles web fournis.
    - SI AUCUNE SOURCE NE TRAITE DIRECTEMENT DU SUJET, DIS-LE CLAIREMENT : "Aucune source pertinente trouvée".
-   - NE TENTE JAMAIS de lier des sujets différents sous prétexte qu'ils partagent des mots-clés isolés (ex: nombres, mots communs). 
+   - NE TENTE JAMAIS de lier des sujets différents sous prétexte qu'ils partagent des mots-clés isolés.
    - Écarte toute source hors sujet.
 2. DISTINCTION : Si les articles se contredisent, expose la contradiction.
 3. CONNAISSANCE EXTERNE : Si tu utilises une info hors sources, précise "Connaissance externe".
@@ -86,8 +88,9 @@ with tab1:
             st.markdown("### ⚖️ Résultat")
             display_verdict(resultat)
             st.markdown(resultat)
-            with st.expander("🔗 Voir les sources"):
-                for s in sources_list: st.write(f"**{s['title']}**: {s['link']}")
+            if sources_list:
+                with st.expander("🔗 Voir les sources"):
+                    for s in sources_list: st.write(f"**{s['title']}**: {s['link']}")
             st.download_button("📥 Télécharger le rapport", resultat, "analyse.txt")
 
 with tab2:
@@ -102,4 +105,4 @@ with tab2:
 
 with tab3:
     st.markdown("#### Comment fonctionne cet outil ?")
-    st.markdown("Cet outil recherche des articles de fact-checking reconnus et propose une analyse structurée. Si aucune source pertinente n'est trouvée, il le signale honnêtement.")
+    st.markdown("Cet outil recherche des articles de fact-checking reconnus et propose une analyse structurée. En cas d'absence de source pertinente, l'outil le signale honnêtement.")
