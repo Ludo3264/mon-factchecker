@@ -186,9 +186,9 @@ with tab3:
     st.markdown("""
     ---
     ### 💡 Guide d'analyse Vidéo :
-    En EMI, apprenez à devenir des **détectives visuels** en analysant 4 indices clés dans une vidéo :
+    Apprenez à devenir des **détectives visuels** en analysant 4 indices clés dans une vidéo :
     1. **La météo et la végétation :** Si la vidéo prétend avoir été filmée en Ukraine en plein mois de décembre mais qu'il y a des arbres verts et des gens en T-shirt, c'est un recyclage d'images anciennes.
     2. **Les détails urbains :** Regardez les plaques d'immatriculation des voitures, la forme des panneaux publicitaires ou la langue des écritures sur les devantures des commerces.
-    3. **Les anomalies physiques (Spécial Deepfake) :** Fixez les yeux de la personne (cligne-t-elle des yeux normalement ?), l'intérieur de la bouche quand elle parle, ou les contours de son visage (y a-t-il un effet de flou bizarre autour des oreilles, du cou ou de ses cheveux ?).
+    3. **Les anomalies physiques (Spécial Deepfake) :** fixez les yeux de la personne (cligne-t-elle des yeux normalement ?), l'intérieur de la bouche quand elle parle, ou les contours de son visage (y a-t-il un effet de flou bizarre autour des oreilles, du cou ou de ses cheveux ?).
     4. **La technique de la capture d'écran :** Faire pause sur un moment marquant et net de la vidéo suspecte. Prenez une **capture d'écran** de ce moment précis, basculez sur l'**Onglet 2 (Image)** de l'application et uploadez-la sur Google Lens. Très souvent, la vidéo d'origine est retrouvée immédiatement !
     """)
