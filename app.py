@@ -15,10 +15,11 @@ TRUSTED_SITES = [
 ]
 
 def search_trusted_sources(claim: str) -> str:
-    # Construction dynamique de la requête avec exclusion des PDF et recherche exacte
+    # Construction dynamique : recherche sur sites de confiance, exclusion PDF
     query_sites = " OR ".join(TRUSTED_SITES)
     search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-    query = f'"{claim}" {query_sites} -filetype:pdf'
+    # Recherche souple sans guillemets stricts pour assurer la trouvaille, mais exclusion PDF
+    query = f"{claim} {query_sites} -filetype:pdf"
     results = search.results(query)
     
     formatted = []
@@ -36,7 +37,7 @@ st.title("🛡️ Outil d'Analyse Critique (EMI)")
 tab1, tab2 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une Image"])
 
 with tab1:
-    user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
+    user_claim = st.text_area("Saisissez l'affirmation ou les mots-clés à vérifier :")
     if st.button("Lancer l'analyse textuelle"):
         with st.spinner("Analyse en cours par l'expert fact-checking..."):
             sources = search_trusted_sources(user_claim)
