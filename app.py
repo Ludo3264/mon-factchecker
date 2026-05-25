@@ -3,7 +3,6 @@ import urllib.parse
 from langchain_groq import ChatGroq
 from langchain_community.utilities import GoogleSerperAPIWrapper
 from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
 # ==============================================================================
@@ -16,14 +15,12 @@ TRUSTED_SITES = [
 ]
 
 def search_trusted_sources(claim: str) -> str:
-    try:
-        search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-        results = search.results(f"{claim} ({' OR '.join(TRUSTED_SITES)})")
-        formatted = [f"Titre: {res.get('title')} | URL: {res.get('link')}\nExtrait: {res.get('snippet')}" 
-                     for res in results.get("organic", [])[:4]]
-        return "\n\n".join(formatted) if formatted else "Aucune source pertinente trouvée."
-    except Exception as e:
-        return f"Erreur : {str(e)}"
+    search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
+    results = search.results(f"{claim} ({' OR '.join(TRUSTED_SITES)})")
+    # Structuration pour faciliter la citation
+    formatted = [f"Source {i+1} ({res.get('title')}): {res.get('link')}\nExtrait: {res.get('snippet')}" 
+                 for i, res in enumerate(results.get("organic", [])[:4])]
+    return "\n\n".join(formatted) if formatted else "Aucune source trouvée."
 
 # ==============================================================================
 # INTERFACE
@@ -34,30 +31,32 @@ st.title("🛡️ Outil d'Analyse Critique (EMI)")
 tab1, tab2 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une Image"])
 
 with tab1:
-    user_claim = st.text_area("Saisissez l'affirmation :")
-    if st.button("Lancer l'analyse"):
+    user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
+    if st.button("Lancer l'analyse textuelle"):
         sources = search_trusted_sources(user_claim)
+        template = """Tu es un expert en fact-checking.
         
-        template = """Tu es un expert en fact-checking. 
-        VERDICT : VRAI, FAUX, ou NUANCÉ (en haut).
-        FAITS : Liste les faits avec source et URL.
-        DÉBATS : Sépare les opinions des faits.
+        RÈGLES STRICTES :
+        1. VERDICT : Affiche VRAI, FAUX ou NUANCÉ en premier.
+        2. HIÉRARCHIE DES FAITS : Les faits biographiques notoires (ex: homosexualité d'une personnalité publique, fonctions exercées) sont des faits établis. Ne les remets jamais en doute.
+        3. TRAITEMENT DES SOURCES : N'utilise jamais une source documentant la désinformation (ex: euvsdisinfo.eu) pour invalider un fait biographique. Ces sources servent uniquement à expliquer comment des manipulateurs utilisent des faits.
+        4. CITATIONS : Utilise exclusivement les URLs fournies dans le contexte ci-dessous pour justifier tes propos.
         
         SOURCES : {context}
         AFFIRMATION : {claim}"""
         
         llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
-        chain = ({"context": lambda x: sources, "claim": lambda x: user_claim} 
-                 | PromptTemplate.from_template(template) | llm | StrOutputParser())
-        
-        st.markdown("### ⚖️ Verdict et Analyse")
-        st.write(chain.invoke({}))
+        chain = PromptTemplate.from_template(template) | llm | StrOutputParser()
+        st.write(chain.invoke({"context": sources, "claim": user_claim}))
 
 with tab2:
-    st.write("Utilisez ces outils pour effectuer une recherche inversée :")
-    img_url = st.text_input("URL de l'image à vérifier :")
+    st.markdown("### 🖼️ Recherche d'image inversée")
+    img_url = st.text_input("URL de l'image :")
     if img_url:
-        encoded_url = urllib.parse.quote_plus(img_url)
-        col1, col2 = st.columns(2)
-        with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}")
-        with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}")
+        encoded = urllib.parse.quote_plus(img_url)
+        st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded}")
+        st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded}")
+        st.markdown("### Sources de confiance pour le contexte :")
+        for site in TRUSTED_SITES:
+            site_name = site.split(':')[1]
+            st.markdown(f"- [Vérifier sur {site_name}](https://www.google.com/search?q={site}+image)")
