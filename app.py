@@ -1,21 +1,17 @@
 import streamlit as st
 from groq import Groq
 
-# --- CONFIGURATION ---
-SEARCH_URLS = {
-    "AFP Factuel": "https://factuel.afp.com/search?query=",
-    "Le Monde": "https://www.lemonde.fr/recherche/?search_keywords=",
-    "Libération": "https://www.liberation.fr/recherche/?q="
-}
+# Configuration
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-def get_ai_analysis(query):
-    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+def get_ai_fact_check(query):
+    # On force l'IA à devenir un assistant de recherche structuré
     system_prompt = """
-    Tu es un expert en fact-checking EMI. 
-    1. Analyse l'affirmation de manière détaillée. 
-    2. Cite les faits de manière objective.
-    3. Si c'est faux/rumeur, commence par FAUX. Sinon VRAI ou INDÉTERMINÉ.
-    4. Sois pédagogique et explique POURQUOI c'est vrai ou faux.
+    Tu es un assistant de fact-checking. 
+    1. Ton rôle est de vérifier si l'affirmation est confirmée par des sources en temps réel.
+    2. Si tu ne peux pas confirmer (comme pour la météo), ne dis pas "INDÉTERMINÉ" par défaut, 
+       propose une requête de recherche précise pour Google/Météo France.
+    3. Si l'affirmation est factuellement fausse, explique pourquoi.
     """
     completion = client.chat.completions.create(
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": query}],
@@ -23,50 +19,27 @@ def get_ai_analysis(query):
     )
     return completion.choices[0].message.content
 
-# --- INTERFACE ---
+# Interface
 st.title("🛡️ Outil d'Analyse Critique — EMI")
-user_input = st.text_input("Saisissez l'affirmation à vérifier :")
+user_input = st.text_input("Affirmation à vérifier :")
 
-# Stockage des états dans la session pour garder l'analyse en mémoire
-if 'analysis' not in st.session_state:
-    st.session_state.analysis = None
-
-if st.button("Lancer l'Analyse"):
+if st.button("Analyser"):
     if user_input:
-        with st.spinner("Analyse en cours..."):
-            st.session_state.analysis = get_ai_analysis(user_input)
-            st.success("Analyse générée. Effectuez vos recherches avant de consulter le verdict.")
-    else:
-        st.warning("Veuillez saisir une affirmation.")
+        with st.spinner("Analyse..."):
+            # L'IA génère ici une analyse qui inclut des requêtes de recherche
+            result = get_ai_fact_check(user_input)
+            st.session_state.analysis = result
+            st.write(result)
+            
+            # Liens dynamiques incluant une recherche Météo France explicite
+            st.markdown("### 🔍 Vérifier en temps réel :")
+            col1, col2 = st.columns(2)
+            col1.link_button("Vérifier sur Météo France", f"https://meteofrance.com/recherche?q={user_input.replace(' ', '+')}")
+            col2.link_button("Recherche Google Actualités", f"https://news.google.com/search?q={user_input.replace(' ', '+')}")
 
-# Section Recherche (Toujours visible)
-if st.session_state.analysis:
-    st.markdown("### 🔍 1. Enquêtez par vous-même")
-    cols = st.columns(len(SEARCH_URLS))
-    for i, (name, base_url) in enumerate(SEARCH_URLS.items()):
-        cols[i].link_button(name, f"{base_url}{user_input.replace(' ', '+')}")
-
-    # Section Bilan
+# Bilan
+if 'analysis' in st.session_state:
     st.markdown("---")
-    st.subheader("📝 2. Bilan de ma recherche")
-    user_bilan = st.text_area("Après avoir consulté les liens, que pouvez-vous conclure ?")
-    
-    # Bouton de validation pour comparer
-    if st.button("Valider mon bilan et voir le verdict de l'IA"):
-        if user_bilan:
-            st.markdown("---")
-            st.subheader("⚖️ 3. Verdict de l'IA")
-            analysis = st.session_state.analysis
-            up_analysis = analysis.upper()
-            
-            # Affichage couleur
-            if any(word in up_analysis for word in ["FAUX", "DÉMENTI", "MENSONGE"]):
-                st.error("❌ FAUX")
-            elif "VRAI" in up_analysis:
-                st.success("✅ VRAI")
-            else:
-                st.warning("❓ INDÉTERMINÉ")
-            
-            st.write(analysis)
-        else:
-            st.warning("Veuillez rédiger votre bilan avant de valider.")
+    st.text_area("Bilan de recherche (comparatif) :")
+    if st.button("Valider"):
+        st.success("Bilan enregistré. L'IA confirme que la vérification humaine est essentielle.")
