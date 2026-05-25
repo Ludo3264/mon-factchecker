@@ -17,6 +17,7 @@ TRUSTED_SITES = [
 def search_trusted_sources(claim: str) -> str:
     query_sites = " OR ".join(TRUSTED_SITES)
     search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
+    # Exclusion des PDF pour ne garder que les articles analysables
     query = f"{claim} {query_sites} -filetype:pdf"
     results = search.results(query)
     
@@ -37,14 +38,17 @@ tab1, tab2 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une Image"
 with tab1:
     user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
     if st.button("Lancer l'analyse textuelle"):
-        with st.spinner("Analyse en cours par l'expert fact-checking..."):
+        with st.spinner("Vérification en cours..."):
             sources = search_trusted_sources(user_claim)
+            # Prompt optimisé pour la VÉRACITÉ et la PERTINENCE
             template = """Tu es un expert en fact-checking. 
-            RÈGLES : 
-            1. VERDICT (VRAI, FAUX, NUANCÉ). 
-            2. ANALYSE : Tu dois impérativement comparer les dates de publication des sources fournies. La source la plus récente fait foi. Explique pourquoi une ancienne source peut être obsolète.
-            3. TRAÇABILITÉ : Liste les URLs en précisant la date de chaque article si disponible.
-            Si les sources ne permettent pas de conclure, indique explicitement : "Les preuves disponibles sont insuffisantes pour confirmer ou infirmer cette affirmation."
+            TA MISSION : Établir la VÉRACITÉ de l'affirmation.
+            RÈGLES D'ANALYSE :
+            1. PRIORITÉ À LA PERTINENCE : Utilise en priorité les sources qui traitent DIRECTEMENT du sujet.
+            2. VÉRACITÉ AVANT TOUT : Si la source la plus récente est hors sujet ou ne mentionne pas le fait, ne l'utilise pas pour invalider une information confirmée par des sources plus anciennes mais précises.
+            3. VERDICT : VRAI, FAUX ou NUANCÉ (basé sur le consensus des sources fiables).
+            4. TRAÇABILITÉ : Liste les URLs et les dates de publication.
+            
             SOURCES : {context}
             AFFIRMATION : {claim}"""
             
