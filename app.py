@@ -157,6 +157,6 @@ with tab2:
 
     st.markdown("""
     ---
-    ### 💡 Astuces d'animation pour l'atelier :
-    * **Le réflexe capture d'écran :** Apprenez aux élèves que si une image sur Instagram ou TikTok refuse de donner son URL, ils peuvent simplement faire une **capture d'écran**, utiliser l'**Option 2** et l'uploader directement sur le Google Lens officiel.
+    ### 💡 Astuces :
+    * **Le réflexe capture d'écran :** Si une image sur Instagram ou TikTok refuse de donner son URL, faire une **capture d'écran**, utiliser l'**Option 2** et l'uploader directement sur le Google Lens officiel.
     """)
