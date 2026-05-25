@@ -34,19 +34,19 @@ def search_trusted_sources(claim: str) -> str:
     except Exception as e:
         return f"Erreur moteur de recherche : {str(e)}"
 
-template = """Tu es un expert en fact-checking. Ton rôle est de vérifier l'affirmation en te basant EXCLUSIVEMENT sur les extraits fournis.
+# Nouveau Template orienté Analyse Cognitive
+template = """Tu es un expert en éducation aux médias (EMI). Analyse l'affirmation et les extraits fournis.
 
-RÈGLES DE HIÉRARCHIE :
-1. Priorise les faits établis sur les opinions, commentaires ou arguments de défense.
-2. Si l'affirmation est vérifiée, le VERDICT doit être VRAI.
-3. Structure la réponse comme suit :
-   - VERDICT : VRAI / FAUX / NUANCÉ
-   - FAIT ÉTABLI : Résumé du point vérifiable sans interprétation.
-   - ANALYSE DES OPINIONS/DÉBATS : Identifie et sépare les avis, polémiques ou interprétations présents dans les sources qui ne constituent pas un fait.
-   - SOURCE : Identifie le nom du média en te basant sur le contexte. Si non explicite, indique le domaine probable.
-   - TITRE DE RÉFÉRENCE : Donne le TITRE de l'article trouvé dans le texte si disponible, sinon "Non disponible".
-4. Ne jamais utiliser de connaissances externes.
-5. Si les sources sont en anglais, traduis le résultat en français.
+RÈGLES D'ANALYSE :
+1. VERDICT : VRAI / FAUX / NUANCÉ.
+2. FAITS : Quels sont les éléments factuels vérifiables ?
+3. OPINIONS & RUMEURS : Identifie ce qui relève de l'interprétation, du ressenti ou de la rumeur non sourcée.
+4. MÉCANISMES À L'OEUVRE : Identifie si les extraits présentent :
+   - Un BIAIS COGNITIF (ex: biais de confirmation, effet de halo).
+   - Une tentative d'enfermement dans une BULLE DE FILTRES (ex: ton émotionnel, polarisation).
+   - Une structure de RUMEUR (ex: absence de preuve, appel à l'émotion).
+5. SOURCE : Identifie le média.
+6. TITRE : Donne le titre si disponible, sinon "Non disponible".
 
 ---
 EXTRAITS DE PRESSE FOURNIS :
@@ -76,50 +76,39 @@ def executer_fact_checking(claim: str, context_sources: str) -> str:
 # ==============================================================================
 # INTERFACE UTILISATEUR
 # ==============================================================================
-st.set_page_config(page_title="Fact-Checking Global", page_icon="🛡️", layout="centered")
+st.set_page_config(page_title="Fact-Checking EMI", page_icon="🛡️", layout="centered")
 
-st.markdown('<p style="font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;">🛡️ Outil de Fact-Checking</p>', unsafe_allow_html=True)
-st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Version spécialisée (Texte & Image)</p>', unsafe_allow_html=True)
+st.markdown('<p style="font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;">🛡️ Outil d\'Analyse Cognitive (EMI)</p>', unsafe_allow_html=True)
+st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Décomposition des faits, biais et rumeurs</p>', unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs([
     "✍️ Vérifier un Texte", 
-    "🖼️ Vérifier une Image (Recherche Inversée)"
+    "🖼️ Vérifier une Image"
 ])
 
 # ONGLET 1
 with tab1:
-    user_claim = st.text_area("Saisissez l'affirmation à vérifier :", placeholder="Exemple : Une rumeur internationale dit que...", height=100)
-    if st.button("Lancer la vérification", type="primary"):
+    user_claim = st.text_area("Saisissez l'affirmation à analyser :", height=100)
+    if st.button("Lancer l'analyse critique", type="primary"):
         if not user_claim.strip():
-            st.warning("⚠️ Saisissez du texte avant de lancer.")
+            st.warning("⚠️ Saisissez du texte.")
         else:
-            with st.spinner("🔍 Recherche sur le réseau international..."):
+            with st.spinner("🔍 Recherche et analyse en cours..."):
                 sources_text = search_trusted_sources(user_claim)
-            with st.spinner("🤖 Analyse critique multilingue par l'IA..."):
-                resultat_verdict = executer_fact_checking(user_claim, sources_text)
+                resultat_analyse = executer_fact_checking(user_claim, sources_text)
             
-            st.markdown('<p style="font-size:1.3rem; font-weight:bold; margin-top:20px;">⚖️ Analyse et conclusions :</p>', unsafe_allow_html=True)
-            st.write(resultat_verdict)
-            st.info("💡 **Conseil pédagogique :** Observez comment l'outil sépare le 'Fait établi' de l' 'Analyse des opinions'. C'est la base du travail de journaliste : ne jamais confondre ce qui est prouvé avec ce qui est dit ou pensé.")
+            st.markdown('<p style="font-size:1.3rem; font-weight:bold; margin-top:20px;">⚖️ Résultats de l\'analyse EMI :</p>', unsafe_allow_html=True)
+            st.write(resultat_analyse)
+            st.info("💡 **Défi pédagogique :** Identifiez le mécanisme de manipulation détecté (Biais, Bulle, Rumeur) et débattez : pourquoi l'auteur a-t-il utilisé ce levier plutôt qu'un argument factuel ?")
             
-            with st.expander("🔗 Consulter les extraits de presse bruts (Monde)"):
+            with st.expander("🔗 Voir les sources brutes"):
                 st.write(sources_text)
 
 # ONGLET 2
 with tab2:
-    st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Traquer l\'origine d\'une image</p>', unsafe_allow_html=True)
-    image_url = st.text_input("Collez l'URL de l'image :", placeholder="https://exemple.com/image.jpg", key="url_mode")
+    st.markdown("### 🖼️ Traçage d'image")
+    image_url = st.text_input("URL de l'image :")
     if image_url:
-        try:
-            st.image(image_url, caption="Image soumise via URL", width=300)
-            encoded_url = urllib.parse.quote_plus(image_url)
-            col1, col2 = st.columns(2)
-            with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded_url}", type="primary", use_container_width=True)
-            with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded_url}", use_container_width=True)
-        except Exception:
-            st.error("Impossible d'afficher cette image.")
-    st.markdown("---")
-    st.markdown("#### 📱 Option : Vous avez enregistré l'image sur votre appareil")
-    col_up1, col_up2 = st.columns(2)
-    with col_up1: st.link_button("📸 Uploader sur Google Lens officiel", "https://lens.google.com", use_container_width=True)
-    with col_up2: st.link_button("🤖 Uploader sur TinEye officiel", "https://tineye.com", use_container_width=True)
+        col1, col2 = st.columns(2)
+        with col1: st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={urllib.parse.quote_plus(image_url)}", use_container_width=True)
+        with col2: st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={urllib.parse.quote_plus(image_url)}", use_container_width=True)
