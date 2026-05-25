@@ -9,19 +9,18 @@ TRUSTED_SITES = [
 ]
 
 def get_ai_analysis(query):
-    """Analyse via Groq avec obligation de citation des sources."""
+    """Analyse via Groq avec instruction de recherche forcée."""
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     
-    # Prompt renforcé avec obligation de citation
+    # Prompt optimisé pour forcer la recherche dans les sources listées
     system_prompt = f"""
-    Tu es un rédacteur en chef d'un service de fact-checking professionnel.
-    Ton ton est neutre, factuel et concis.
-    Règles absolues :
-    1. Base ton analyse UNIQUEMENT sur les sites suivants : {', '.join(TRUSTED_SITES)}.
-    2. Si l'information est fausse ou une rumeur, commence ta réponse par 'FAUX' et explique brièvement les faits.
-    3. TU DOIS OBLIGATOIREMENT CITER TES SOURCES en fin de réponse en listant les URLs des sites de confiance utilisés.
-    4. NE CITE AUCUNE SOURCE HORS DE CETTE LISTE. Si aucune information ne confirme l'affirmation, réponds 'INDÉTERMINÉ'.
-    5. Ne justifie pas ton processus de recherche, donne directement le résultat.
+    Tu es un expert en fact-checking. 
+    Règles strictes :
+    1. Analyse l'affirmation en recherchant activement si elle a été traitée, confirmée ou démentie par : {', '.join(TRUSTED_SITES)}.
+    2. Si un article existe sur ces sites, cite explicitement le titre de l'article et le lien direct vers celui-ci.
+    3. Si l'information est fausse ou une rumeur, commence ta réponse par 'FAUX' et explique brièvement les faits.
+    4. NE CITE AUCUNE SOURCE HORS DE CETTE LISTE.
+    5. Si après vérification dans ces sites tu ne trouves rien, réponds 'INDÉTERMINÉ' en expliquant que les sources de référence n'ont pas traité ce sujet.
     """
     
     completion = client.chat.completions.create(
@@ -45,7 +44,7 @@ with tab1:
     
     if st.button("Analyser le Texte"):
         if user_input:
-            with st.spinner("Analyse rigoureuse en cours..."):
+            with st.spinner("Recherche active dans les sources de confiance..."):
                 try:
                     analysis = get_ai_analysis(user_input)
                     up_analysis = analysis.upper()
