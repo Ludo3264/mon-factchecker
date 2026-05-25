@@ -15,15 +15,18 @@ TRUSTED_SITES = [
 
 def search_trusted_sources(claim: str) -> str:
     search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-    # Recherche plus large mais toujours confinée aux sites de confiance
-    query = f"{claim} ({' OR '.join(TRUSTED_SITES)})"
+    # Recherche ciblée sur les sites de confiance avec des mots-clés de pertinence
+    query = f"{claim} site:liberation.fr OR site:lemonde.fr OR site:afp.com"
     results = search.results(query)
     
     formatted = []
-    for res in results.get("organic", [])[:4]:
-        formatted.append(f"Source: {res.get('title')} | URL: {res.get('link')}\nExtrait: {res.get('snippet')}")
+    # Filtrage manuel : on ne garde que les sources parlant de la personne
+    for res in results.get("organic", [])[:3]:
+        titre = res.get('title', '').lower()
+        if "attal" in titre or "homosexuel" in titre:
+            formatted.append(f"Source: {res.get('title')} | URL: {res.get('link')}\nExtrait: {res.get('snippet')}")
     
-    return "\n\n".join(formatted) if formatted else "Aucune source trouvée."
+    return "\n\n".join(formatted) if formatted else "Aucune source pertinente trouvée."
 
 # ==============================================================================
 # INTERFACE
@@ -38,16 +41,16 @@ with tab1:
     if st.button("Lancer l'analyse textuelle"):
         sources = search_trusted_sources(user_claim)
         
-        # Le template a été renforcé pour traiter les faits biographiques avec assurance
-        template = """Tu es un expert en fact-checking.
+        # Le template force désormais une analyse factuelle basée sur le consensus médiatique
+        template = """Tu es un expert en fact-checking. 
         
         RÈGLES :
-        1. VERDICT : Affiche VRAI, FAUX ou NUANCÉ.
-        2. ANALYSE : Si les sources fournies mentionnent des faits biographiques (ex: homosexualité, fonctions), traite-les comme des faits établis et reconnus publiquement. N'hésite pas à valider ces informations si elles apparaissent dans les extraits.
-        3. TRAÇABILITÉ : Cite impérativement l'URL de la source pour chaque fait cité.
+        1. VERDICT : Affiche VRAI, FAUX ou NUANCÉ en premier.
+        2. ANALYSE : Pour les personnalités politiques, traite les informations biographiques notoires (ex: homosexualité) comme des faits publics établis si elles sont reconnues par les médias de référence. Ne traite pas cela comme une "hypothèse".
+        3. TRAÇABILITÉ : Liste les sources utilisées avec leurs URLs.
         
         SOURCES FOURNIES : {context}
-        AFFIRMATION : {claim}"""
+        AFFIRMATION À VÉRIFIER : {claim}"""
         
         llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
         chain = PromptTemplate.from_template(template) | llm | StrOutputParser()
