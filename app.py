@@ -78,13 +78,17 @@ def executer_fact_checking(claim: str, context_sources: str) -> str:
 st.set_page_config(page_title="Fact-Checking Global", page_icon="🛡️", layout="centered")
 
 st.markdown('<p style="font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;">🛡️ Outil de Fact-Checking Global & EMI</p>', unsafe_allow_html=True)
-st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Version Réseau International & Laboratoire d\'images (Propulsée par Groq & Llama 3.1)</p>', unsafe_allow_html=True)
+st.markdown('<p style="color: #4B5563; margin-bottom: 25px;">Version Réseau International & Laboratoires Visuels (Propulsée par Groq & Llama 3.1)</p>', unsafe_allow_html=True)
 
-# Création des onglets pour séparer les deux ateliers
-tab1, tab2 = st.tabs(["✍️ Vérifier un Texte (Moteur IA d'origine)", "🖼️ Vérifier une Image (Recherche Inversée)"])
+# Création des trois onglets pour séparer les ateliers
+tab1, tab2, tab3 = st.tabs([
+    "✍️ Vérifier un Texte (Moteur IA d'origine)", 
+    "🖼️ Vérifier une Image (Recherche Inversée)",
+    "📹 Vérifier une Vidéo (Analyse Visuelle)"
+])
 
 # ==============================================================================
-# ONGLET 1 : VOTRE BLOC DE CODE TEXTE INITIAL (Totalement inchangé)
+# ONGLET 1 : BLOC DE CODE TEXTE INITIAL (Totalement inchangé)
 # ==============================================================================
 with tab1:
     user_claim = st.text_area("Saisissez l'affirmation à vérifier :", placeholder="Exemple : Une rumeur internationale dit que...", height=100)
@@ -108,7 +112,7 @@ with tab1:
                 st.write(sources_text)
 
 # ==============================================================================
-# ONGLET 2 : AJOUT DE LA RECHERCHE D'IMAGE INVERSÉE (Version Optimisée Atelier)
+# ONGLET 2 : RECHERCHE D'IMAGE INVERSÉE (Totalement inchangé)
 # ==============================================================================
 with tab2:
     st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Traquer l\'origine d\'une image ou d\'une photo</p>', unsafe_allow_html=True)
@@ -159,4 +163,32 @@ with tab2:
     ---
     ### 💡 Astuces :
     * **Le réflexe capture d'écran :** Si une image sur Instagram ou TikTok refuse de donner son URL, faire une **capture d'écran**, utiliser l'**Option 2** et l'uploader directement sur le Google Lens officiel.
+    """)
+
+# ==============================================================================
+# ONGLET 3 : LA STATION DE FACT-CHECKING VIDÉO (Nouveau volet)
+# ==============================================================================
+with tab3:
+    st.markdown('<p style="font-size:1.3rem; font-weight:bold; color: #1E3A8A; margin-top:10px;">Enquêter sur une vidéo suspecte (TikTok, Reels, YouTube)</p>', unsafe_allow_html=True)
+    st.write("**Objectif pédagogique :** Apprendre à repérer les vidéos sorties de leur contexte, recyclées ou générées par IA (Deepfakes).")
+    
+    st.markdown("#### 🛠️ La boîte à outils du Fact-Checking Vidéo")
+    st.write("Pour analyser une vidéo, l'astuce consiste à la découper en images fixes pour les analyser séparément.")
+
+    col_vid1, col_vid2 = st.columns(2)
+    with col_vid1:
+        st.link_button("🛡️ Ouvrir l'outil mondial InVID / WeVerify", "https://www.invid-project.eu/", type="primary", use_container_width=True)
+        st.caption("L'extension incontournable des journalistes. Elle permet de découper n'importe quelle vidéo du web en images clés d'un simple clic.")
+    with col_vid2:
+        st.link_button("🎞️ Utiliser Watch Frame by Frame", "http://www.watchframebyframe.com/", use_container_width=True)
+        st.caption("Idéal pour analyser une vidéo YouTube ou Vimeo seconde par seconde (image par image) pour repérer les faux raccords ou les trucages numériques.")
+
+    st.markdown("""
+    ---
+    ### 💡 Guide d'animation pour votre atelier Vidéo :
+    En EMI, apprenez-leur à devenir des **détectives visuels** en analysant 4 indices clés dans une vidéo :
+    1. **La météo et la végétation :** Si la vidéo prétend avoir été filmée en Ukraine en plein mois de décembre mais qu'il y a des arbres verts et des gens en T-shirt, c'est un recyclage d'images anciennes.
+    2. **Les détails urbains :** Regardez les plaques d'immatriculation des voitures, la forme des panneaux publicitaires ou la langue des écritures sur les devantures des commerces.
+    3. **Les anomalies physiques (Spécial Deepfake) :** Demandez aux élèves de fixer les yeux de la personne (cligne-t-elle des yeux normalement ?), l'intérieur de la bouche quand elle parle, ou les contours de son visage (y a-t-il un effet de flou bizarre autour des oreilles, du cou ou de ses cheveux ?).
+    4. **La technique de la capture d'écran :** Demandez aux élèves de faire pause sur un moment marquant et net de la vidéo suspecte. Prenez une **capture d'écran** de ce moment précis, basculez sur l'**Onglet 2 (Image)** de l'application et uploadez-la sur Google Lens. Très souvent, la vidéo d'origine est retrouvée immédiatement !
     """)
