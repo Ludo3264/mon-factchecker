@@ -9,16 +9,17 @@ TRUSTED_SITES = [
 ]
 
 def get_ai_analysis(query):
-    """Appel à l'API Groq avec le modèle stable."""
+    """Appel à l'API Groq avec instruction système améliorée."""
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     
     system_prompt = f"""
     Tu es un expert en vérification de faits (Fact-checker) pour l'EMI.
     Règles strictes :
-    1. Base ton analyse UNIQUEMENT sur ces sources : {', '.join(TRUSTED_SITES)}.
-    2. Si aucune preuve n'est trouvée dans ces sites, réponds impérativement par 'INDÉTERMINÉ' et explique pourquoi.
-    3. Ne jamais inventer.
-    4. Pour chaque fait cité, insère le lien cliquable vers la source originale en markdown ex: [Titre](URL).
+    1. Si l'affirmation concerne une personnalité publique ou un fait historique, donne d'abord une définition factuelle courte et neutre basée sur tes connaissances générales avant d'analyser l'affirmation.
+    2. Base ton analyse de l'affirmation UNIQUEMENT sur ces sources : {', '.join(TRUSTED_SITES)}.
+    3. Si l'information est une rumeur démentie par ces sources, réponds 'FAUX' et cite le lien de l'article de démenti.
+    4. Si l'information n'est pas confirmée ou absente, réponds 'INDÉTERMINÉ'.
+    5. Ne jamais inventer. Cite tes sources avec des liens cliquables en markdown : [Titre](URL).
     """
     
     completion = client.chat.completions.create(
@@ -47,11 +48,12 @@ with tab1:
                     analysis = get_ai_analysis(user_input)
                     st.subheader("⚖️ Résultat")
                     
-                    if "INDÉTERMINÉ" in analysis.upper():
+                    # Logique de verdict basée sur le retour de l'IA
+                    if "FAUX" in analysis.upper() or "DÉMENTI" in analysis.upper():
+                        st.write("❌ **FAUX**")
+                    elif "INDÉTERMINÉ" in analysis.upper():
                         st.write("❓ **INDÉTERMINÉ**")
                         st.warning("⚠️ Aucune source fiable trouvée. Conformément à la méthode, ne partagez pas cette information.")
-                    elif "FAUX" in analysis.upper() or "DÉMENTI" in analysis.upper():
-                        st.write("❌ **FAUX**")
                     else:
                         st.write("✅ **VÉRIFIÉ / PROBABLE**")
                     
