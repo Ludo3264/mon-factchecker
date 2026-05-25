@@ -11,7 +11,9 @@ from langchain_core.output_parsers import StrOutputParser
 TRUSTED_SITES = [
     "site:factuel.afp.com", "site:lemonde.fr/les-decodeurs", "site:liberation.fr/checknews",
     "site:francetvinfo.fr/vrai-ou-fake", "site:factcheck.org", "site:fullfact.org",
-    "site:snopes.com", "site:reuters.com/fact-check", "site:euvsdisinfo.eu"
+    "site:snopes.com", "site:reuters.com/fact-check", "site:euvsdisinfo.eu",
+    "site:cnrs.fr", "site:inserm.fr", "site:nasa.gov", "site:futura-sciences.com",
+    "site:service-public.fr", "site:vie-publique.fr"
 ]
 
 def search_trusted_sources(claim: str) -> tuple[list[dict], str]:
