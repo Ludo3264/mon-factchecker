@@ -54,8 +54,8 @@ tab1, tab2, tab3 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une 
 
 with tab1:
     st.subheader("✍️ Analyseur Critique")
-    cat_selection = st.selectbox("Sélectionnez le domaine de votre recherche :", list(SOURCES.keys()))
-    user_input = st.text_input("Saisissez l'affirmation à vérifier :")
+    cat_selection = st.selectbox("Sélectionnez le domaine :", list(SOURCES.keys()))
+    user_input = st.text_input("Saisissez l'affirmation :")
 
     if st.button("Lancer l'analyse"):
         if user_input:
@@ -65,36 +65,37 @@ with tab1:
             st.session_state.step = 1
 
     if st.session_state.get('step') == 1:
-        st.markdown(f"### 🔍 Sources suggérées ({st.session_state.cat})")
+        st.info("💡 **Astuce Vie Privée** : Faites un **clic-droit** sur les boutons ci-dessous > 'Ouvrir dans une fenêtre de navigation privée' pour protéger vos données.")
+        
+        st.markdown(f"### 🔍 Sources spécialisées ({st.session_state.cat})")
         cols = st.columns(len(SOURCES[st.session_state.cat]))
         for i, (name, base_url) in enumerate(SOURCES[st.session_state.cat].items()):
             cols[i].link_button(name, f"{base_url}{st.session_state.user_input.replace(' ', '+')}")
         
-        st.write("---")
-        st.subheader("📝 Bilan de votre recherche")
-        user_bilan = st.text_area("Rédigez votre conclusion après avoir consulté les sources :")
+        st.markdown("---")
+        st.subheader("🌐 Recherche libre (Anonymat)")
+        c1, c2 = st.columns(2)
+        c1.link_button("DuckDuckGo", f"https://duckduckgo.com/?q={st.session_state.user_input.replace(' ', '+')}")
+        c2.link_button("Qwant", f"https://www.qwant.com/?q={st.session_state.user_input.replace(' ', '+')}")
         
-        if st.button("Comparer mon bilan avec l'expert"):
-            analysis = st.session_state.analysis
-            color = "#ff5252" if "[FAUX]" in analysis.upper() else "#4caf50" if "[VRAI]" in analysis.upper() else "#ff9800"
-            c1, c2 = st.columns(2)
-            c1.info(f"👤 **Votre Bilan :**\n\n{user_bilan}")
-            c2.markdown(f"""<div style="background-color: {color}15; padding: 15px; border-radius: 10px; border-left: 5px solid {color};">
-                <h3 style="color: {color};">🤖 Analyse de l'expert</h3>{analysis.replace('[VRAI]', '').replace('[FAUX]', '').replace('[INCERTAIN]', '')}</div>""", unsafe_allow_html=True)
+        st.write("---")
+        st.subheader("📝 Bilan")
+        user_bilan = st.text_area("Rédigez votre conclusion après consultation des sources :")
+        
+        if st.button("Comparer avec l'analyse experte"):
+            st.markdown(f"**Analyse :**\n{st.session_state.analysis}")
 
 with tab2:
     st.subheader("🖼️ Vérifier une Image")
-    st.write("Utilisez ces outils pour effectuer une recherche inversée :")
     c1, c2, c3 = st.columns(3)
     c1.link_button("Google Lens", "https://lens.google.com/")
     c2.link_button("TinEye", "https://tineye.com/")
-    c3.link_button("Bing Visual Search", "https://www.bing.com/visualsearch/")
+    c3.link_button("Bing Visual", "https://www.bing.com/visualsearch/")
 
 with tab3:
     st.subheader("ℹ️ Méthode : Le Doute Méthodique")
     st.markdown("""
-    * **Croisez** : Utilisez les rubriques spécialisées pour vérifier les faits.
-    * **Identifiez** : Une information sourcée par des institutions (INSEE, Météo-France, HCE, etc.) est plus robuste.
-    * **L'IA est un assistant** : Si elle répond 'Incertain', c'est à vous de mener l'enquête manuellement via les boutons proposés.
-    * **Réseaux sociaux** : Soyez doublement vigilants, c'est le terrain privilégié de la désinformation.
+    * **Clic-droit** : Utilisez toujours cette option pour ouvrir vos recherches en mode privé.
+    * **Croisez** : Ne vous fiez jamais à une source unique.
+    * **Institutions** : Priorisez les sites officiels (INSEE, Ministère, HCE) pour les sujets de société.
     """)
