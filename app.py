@@ -4,13 +4,22 @@ from groq import Groq
 # --- CONFIGURATION ---
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
+# Liens de recherche pour les élèves
+SEARCH_URLS = {
+    "AFP Factuel": "https://factuel.afp.com/search?query=",
+    "Le Monde": "https://www.lemonde.fr/recherche/?search_keywords=",
+    "Libération": "https://www.liberation.fr/recherche/?q=",
+    "France Info": "https://www.francetvinfo.fr/recherche/?search="
+}
+
 def get_expert_analysis(query):
     system_prompt = """
     Tu es un expert en fact-checking EMI. 
     1. Analyse l'affirmation avec rigueur. 
     2. Cite des sources institutionnelles ou médias de référence.
-    3. Structure ta réponse en : 1. Faits observés, 2. Biais détectés, 3. Méthodologie de vérification.
+    3. Structure ta réponse obligatoirement en : 1. Faits observés, 2. Biais détectés, 3. Méthodologie de vérification.
     4. Sois détaillé. Si l'info est en temps réel, explique la méthode de vérification.
+    5. N'invente jamais de titres d'articles. Cite uniquement des sources réelles et facilement vérifiables.
     """
     completion = client.chat.completions.create(
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": query}],
@@ -40,11 +49,16 @@ with tab1:
         st.markdown("### 🤖 Analyse de l'IA")
         st.markdown(st.session_state.analysis)
         
+        # Boutons de recherche réintégrés
+        st.markdown("---")
+        st.subheader("🔍 Poursuivez votre enquête (Recherche manuelle) :")
+        cols = st.columns(len(SEARCH_URLS))
+        for i, (name, base_url) in enumerate(SEARCH_URLS.items()):
+            cols[i].link_button(name, f"{base_url}{user_input.replace(' ', '+')}")
+            
         st.markdown("---")
         st.subheader("📝 Bilan de ma recherche")
         user_bilan = st.text_area("Rédigez votre conclusion après avoir consulté les sources :")
-        
-        note = st.slider("Quelle note attribuez-vous à la pertinence de votre recherche (1 à 5) ?", 1, 5, 3)
         
         if st.button("Comparer mon bilan avec l'analyse experte"):
             st.markdown("---")
@@ -52,32 +66,21 @@ with tab1:
             with col1:
                 st.subheader("👤 Mon Bilan")
                 st.info(user_bilan)
-                st.write(f"Auto-évaluation : {note}/5")
             with col2:
                 st.subheader("🤖 Verdict de l'IA")
                 st.write(st.session_state.analysis)
-            st.success("Analyse terminée : comparez vos points de divergence avec l'IA.")
 
 with tab2:
     st.subheader("🖼️ Vérifier une Image")
-    st.write("Utilisez ces outils pour effectuer une recherche inversée :")
+    # ... (le contenu reste identique)
     col1, col2, col3 = st.columns(3)
     col1.link_button("Google Lens", "https://lens.google.com/")
     col2.link_button("TinEye", "https://tineye.com/")
     col3.link_button("Bing Visual Search", "https://www.bing.com/visualsearch")
-    
-    st.markdown("---")
     img_input = st.text_input("Collez l'URL de l'image ici :")
     if st.button("Analyser l'Image"):
-        st.info("Recherche de similarité dans les bases de données en cours...")
+        st.info("Recherche de similarité en cours...")
 
 with tab3:
     st.subheader("ℹ️ Méthode : La règle du doute méthodique")
-    st.write("""
-    Face à une information douteuse, adoptez les réflexes des journalistes :
-    
-    1. **Croisement des sources :** Ne vous contentez jamais d'une seule source. 
-    2. **Analyse de la preuve :** Une information sans source primaire est suspecte.
-    3. **Le doute méthodique :** Si aucune source fiable ne confirme, considérez l'info comme INDÉTERMINÉE.
-    4. **Responsabilité :** Si le résultat est FAUX, ne partagez pas.
-    """)
+    st.write("Le doute est un hommage rendu à la vérité. Croisez, vérifiez, ne partagez pas sans preuve.")
