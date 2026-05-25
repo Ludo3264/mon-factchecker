@@ -18,13 +18,18 @@ def get_expert_analysis(query):
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     current_date = datetime.now().strftime('%d %B %Y')
     system_prompt = f"""
-    Nous sommes le {current_date}. Tu es un expert EMI. 
-    RÈGLE 1 : Considère la date du {current_date} comme un fait établi.
-    RÈGLE 2 : Analyse l'affirmation. Si elle est fausse/rumeur, déclare-la FAUSSE fermement. 
-    RÈGLE 3 : Si tu ne peux pas vérifier en temps réel, renvoie vers les liens fournis.
+    Nous sommes le {current_date}. Tu es un expert EMI (Éducation aux Médias et à l'Information).
+    
+    RÈGLE : Utilise des sources journalistiques de référence (presse nationale, agences, institutions, fact-checkers).
+    Ne te limite pas à une ou deux sources. Cherche des preuves textuelles récentes.
+    Si tu confirmes une info, cite le titre de l'article et l'URL. Si c'est une rumeur, déclare-la FAUSSE fermement.
+    
     Structure OBLIGATOIRE :
     [VERDICT] : VRAI, FAUX ou INCERTAIN
-    1. Faits observés (dates, données). 2. Biais détectés. 3. Méthodologie. 4. Sources (URL cliquables).
+    1. Faits observés (synthèse des preuves).
+    2. Biais détectés (analyse critique du discours).
+    3. Méthodologie (comment croiser les données).
+    4. Sources (Liste d'URL cliquables).
     """
     completion = client.chat.completions.create(
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": query}],
@@ -33,7 +38,7 @@ def get_expert_analysis(query):
     return completion.choices[0].message.content
 
 # --- INTERFACE ---
-st.set_page_config(page_title="Outil EMI", layout="wide")
+st.set_page_config(page_title="Outil EMI Expert", layout="wide")
 st.title("🛡️ Outil d'Analyse Critique — EMI")
 
 tab1, tab2, tab3 = st.tabs(["✍️ Vérifier un Texte", "🖼️ Vérifier une Image", "ℹ️ Méthode"])
@@ -57,13 +62,17 @@ with tab1:
             cols[i].link_button(name, f"{base_url}{st.session_state.user_input.replace(' ', '+')}")
         
         st.write("---")
+        st.write("💡 **Recherche libre :**")
+        search_url = st.text_input("Tapez votre moteur de recherche (ex: Google, DuckDuckGo) :", "https://www.google.com/search?q=")
+        st.link_button("Lancer ma recherche", f"{search_url}{st.session_state.user_input.replace(' ', '+')}")
+        
+        st.markdown("---")
         st.subheader("📝 Bilan de votre recherche")
         user_bilan = st.text_area("Rédigez votre conclusion après avoir consulté les sources :")
         
         if st.button("Comparer mon bilan avec l'expert"):
             analysis = st.session_state.analysis
             color = "#ff5252" if "[FAUX]" in analysis.upper() else "#4caf50" if "[VRAI]" in analysis.upper() else "#ff9800"
-            
             c1, c2 = st.columns(2)
             c1.info(f"👤 **Votre Bilan :**\n\n{user_bilan}")
             c2.markdown(f"""<div style="background-color: {color}15; padding: 15px; border-radius: 10px; border-left: 5px solid {color};">
@@ -80,8 +89,8 @@ with tab2:
 with tab3:
     st.subheader("ℹ️ Méthode : Le Doute Méthodique")
     st.markdown("""
-    1. **Croisez les sources** : Une seule source ne suffit jamais pour confirmer une information.
-    2. **Identifiez l'auteur** : Qui publie ? Est-ce un site officiel, un média reconnu, ou un compte anonyme ?
-    3. **Analysez la tonalité** : Une information factuelle est neutre. Si le texte joue sur vos émotions (peur, colère), soyez extrêmement vigilant.
-    4. **Vérifiez la date** : Une information réelle peut devenir fausse si elle est sortie de son contexte temporel.
+    * **Croisez les sources** : Une seule source ne suffit jamais.
+    * **L'IA est un assistant** : Si elle répond 'Incertain', c'est à vous de mener l'enquête.
+    * **Vérifiez la fraîcheur** : Une info réelle devient fausse si elle est sortie de son contexte temporel.
+    * **Gardez l'esprit critique** : Ne confondez pas une information (faits) avec une opinion ou une rumeur.
     """)
