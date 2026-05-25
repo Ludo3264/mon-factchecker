@@ -16,15 +16,11 @@ TRUSTED_SITES = [
 
 def search_trusted_sources(claim: str) -> str:
     search = GoogleSerperAPIWrapper(gl="fr", hl="fr")
-    # Requête élargie pour capter les faits biographiques établis dans la presse
     query = f"{claim} site:liberation.fr OR site:lemonde.fr OR site:afp.com"
     results = search.results(query)
-    
     formatted = []
-    # Sélection des sources les plus pertinentes sur le sujet
     for res in results.get("organic", [])[:3]:
         formatted.append(f"Source: {res.get('title')} | URL: {res.get('link')}\nExtrait: {res.get('snippet')}")
-    
     return "\n\n".join(formatted) if formatted else "Aucune source pertinente trouvée."
 
 # ==============================================================================
@@ -39,12 +35,8 @@ with tab1:
     user_claim = st.text_area("Saisissez l'affirmation à vérifier :")
     if st.button("Lancer l'analyse textuelle"):
         sources = search_trusted_sources(user_claim)
-        # Template corrigé : force la validation des faits biographiques notoires
-        template = """Tu es un expert en fact-checking.
-        RÈGLES :
-        1. VERDICT : Affiche VRAI, FAUX ou NUANCÉ en premier.
-        2. ANALYSE : Traite les faits biographiques (ex: orientation sexuelle de personnalités politiques) comme des faits publics établis s'ils sont documentés dans les sources fournies. Ne les qualifie jamais d'inappropriés ou de privés si la presse de référence les traite.
-        3. TRAÇABILITÉ : Cite les URLs pour chaque fait.
+        template = """Tu es un expert en fact-checking. 
+        RÈGLES : 1. VERDICT (VRAI, FAUX, NUANCÉ). 2. ANALYSE. 3. TRAÇABILITÉ (URLs).
         SOURCES : {context}
         AFFIRMATION : {claim}"""
         
@@ -52,10 +44,21 @@ with tab1:
         chain = PromptTemplate.from_template(template) | llm | StrOutputParser()
         resultat = chain.invoke({"context": sources, "claim": user_claim})
         
+        # Affichage
         st.markdown("### ⚖️ Résultat")
         st.write(resultat)
+        
+        # Ajout du bouton de téléchargement
+        rapport_complet = f"ANALYSE EMI\n\nAffirmation : {user_claim}\n\n{resultat}\n\nSOURCES :\n{sources}"
+        st.download_button(
+            label="📥 Télécharger le rapport (format .txt)",
+            data=rapport_complet,
+            file_name="analyse_fact_checking.txt",
+            mime="text/plain"
+        )
+        
         st.markdown("---")
-        st.markdown("### 🔗 Sources")
+        st.markdown("### 🔗 Sources utilisées")
         st.write(sources)
 
 with tab2:
@@ -68,7 +71,7 @@ with tab2:
         st.link_button("👁️ Google Lens", f"https://lens.google.com/uploadbyurl?url={encoded}")
         st.link_button("🤖 TinEye", f"https://tineye.com/search/?url={encoded}")
     else:
-        st.info("Saisissez une URL pour activer les boutons de recherche.")
+        st.info("Saisissez une URL pour activer les moteurs.")
             
     st.markdown("#### 2. Sources de confiance pour contexte")
     for site in TRUSTED_SITES:
