@@ -143,20 +143,22 @@ def reset_session():
 
 def extract_verdict(analysis: str) -> str:
     """
-    Extrait le verdict (VRAI / FAUX / INCERTAIN) depuis la réponse du LLM.
-    Gère les deux formats possibles :
-      - "[FAUX]" seul
-      - "[VERDICT] : FAUX" ou "VERDICT : FAUX"
-    Retourne la chaîne normalisée : "VRAI", "FAUX" ou "INCERTAIN".
+    Extrait le verdict depuis la réponse du LLM.
+    Gère toutes les variantes observées :
+      [VERDICT] : FAUX  |  VERDICT : FAUX  |  **VERDICT : FAUX**
+      [FAUX]  |  **[VERDICT] : FAUX**  |  VERDICT : **FAUX**
     """
-    text = analysis.upper()
-    # Cherche d'abord le pattern "[VERDICT] : MOT" ou "VERDICT : MOT"
-    match = re.search(r'VERDICT\s*[:\-]\s*(VRAI|FAUX|INCERTAIN)', text)
+    # Nettoyer markdown gras/italique ET crochets parasites autour de VERDICT
+    t = analysis.upper()
+    t = re.sub(r'\*+', '', t)          # retire ** et *
+    t = re.sub(r'\[VERDICT\]', 'VERDICT', t)  # [VERDICT] → VERDICT
+    # Cherche "VERDICT : VRAI/FAUX/INCERTAIN"
+    match = re.search(r'VERDICT\s*[:\-]\s*(VRAI|FAUX|INCERTAIN)', t)
     if match:
         return match.group(1)
-    # Fallback : cherche les balises isolées [FAUX], [VRAI], [INCERTAIN]
+    # Fallback : balises isolées [FAUX] etc.
     for label in ["FAUX", "VRAI", "INCERTAIN"]:
-        if f"[{label}]" in text:
+        if f"[{label}]" in t:
             return label
     return ""
 
