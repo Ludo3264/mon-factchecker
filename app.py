@@ -141,13 +141,32 @@ def reset_session():
         st.session_state.pop(key, None)
 
 
-def verdict_color(analysis: str) -> str:
+def extract_verdict(analysis: str) -> str:
+    """
+    Extrait le verdict (VRAI / FAUX / INCERTAIN) depuis la réponse du LLM.
+    Gère les deux formats possibles :
+      - "[FAUX]" seul
+      - "[VERDICT] : FAUX" ou "VERDICT : FAUX"
+    Retourne la chaîne normalisée : "VRAI", "FAUX" ou "INCERTAIN".
+    """
     text = analysis.upper()
-    if "[FAUX]" in text:
+    # Cherche d'abord le pattern "[VERDICT] : MOT" ou "VERDICT : MOT"
+    match = re.search(r'VERDICT\s*[:\-]\s*(VRAI|FAUX|INCERTAIN)', text)
+    if match:
+        return match.group(1)
+    # Fallback : cherche les balises isolées [FAUX], [VRAI], [INCERTAIN]
+    for label in ["FAUX", "VRAI", "INCERTAIN"]:
+        if f"[{label}]" in text:
+            return label
+    return ""
+
+
+def verdict_color(verdict: str) -> str:
+    if verdict == "FAUX":
         return "#e53935"
-    if "[VRAI]" in text:
+    if verdict == "VRAI":
         return "#43a047"
-    return "#fb8c00"  # INCERTAIN
+    return "#fb8c00"  # INCERTAIN ou non déterminé
 
 
 # ---------------------------------------------------------------------------
@@ -251,18 +270,21 @@ with tab1:
                 )
             else:
                 analysis = st.session_state.analysis
-                color = verdict_color(analysis)
+                verdict = extract_verdict(analysis)
+                color = verdict_color(verdict)
 
-                # Extraction du verdict pour l'afficher séparément
-                verdict_line = ""
-                clean_analysis = analysis
-                for verdict in ["[VRAI]", "[FAUX]", "[INCERTAIN]"]:
-                    if verdict in analysis.upper():
-                        verdict_line = verdict.replace("[", "").replace("]", "")
-                        clean_analysis = analysis.replace(verdict, "").replace(
-                            verdict.lower(), ""
-                        )
-                        break
+                # Nettoyage du texte : retire la ligne de verdict pour éviter la répétition
+                clean_analysis = re.sub(
+                    r'\[?VERDICT\]?\s*[:\-]\s*(VRAI|FAUX|INCERTAIN)\s*',
+                    '',
+                    analysis,
+                    flags=re.IGNORECASE,
+                ).strip()
+                # Retire aussi les balises isolées [FAUX] etc. résiduelles
+                for label in ["VRAI", "FAUX", "INCERTAIN"]:
+                    clean_analysis = clean_analysis.replace(f"[{label}]", "").replace(
+                        f"[{label.lower()}]", ""
+                    )
 
                 # Bandeau verdict
                 st.markdown(
@@ -277,7 +299,7 @@ with tab1:
                         font-weight:700;
                         color:{color};
                     ">
-                        Verdict IA : {verdict_line or "NON DETERMINÉ"}
+                        Verdict IA : {verdict or "NON DÉTERMINÉ"}
                     </div>
                     """,
                     unsafe_allow_html=True,
