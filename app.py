@@ -1,6 +1,6 @@
 """
-Outil EMI Expert — Version 4.1
-Ajout : section ressources complémentaires (Kit Esprit Critique).
+Outil EMI Expert — Version 4.2
+Mise à jour modèle : llama-3.1-8b-instant → openai/gpt-oss-20b
 """
 
 import re
@@ -74,7 +74,7 @@ SOURCES = {
 }
 
 # Mots-clés courts → modèle léger ; questions complexes → modèle lourd
-MODEL_SIMPLE = "llama-3.1-8b-instant"
+MODEL_SIMPLE = "openai/gpt-oss-20b"
 MODEL_FULL   = "llama-3.3-70b-versatile"
 COMPLEXITY_THRESHOLD = 12  # nombre de mots au-delà duquel on passe au 70b
 
@@ -317,7 +317,7 @@ with st.sidebar:
             st.rerun()
 
     st.markdown("---")
-    st.caption("v4.1 · Groq + Tavily · EMI")
+    st.caption("v4.2 · Groq + Tavily · EMI")
 
 
 # ── Titre principal ──────────────────────────────────────────────────────────
@@ -348,7 +348,7 @@ with tab1:
         st.markdown("##### 🤖 Modèle sélectionné")
         if user_input.strip():
             m = choose_model(user_input)
-            label = "70b — Analyse complète" if m == MODEL_FULL else "8b — Analyse rapide"
+            label = "70b — Analyse complète" if m == MODEL_FULL else "GPT OSS 20B — Analyse rapide"
             st.info(label)
         else:
             st.caption("Saisissez une affirmation pour voir le modèle.")
@@ -399,7 +399,6 @@ with tab1:
     # ── Résultats ──
     if st.session_state.get("step") == 1:
 
-        # Badge modèle utilisé
         model_used = st.session_state.get("model_used", "")
         st.caption(f"Modèle utilisé : `{model_used}`")
 
@@ -457,7 +456,6 @@ with tab1:
                 verdict = extract_verdict(analysis)
                 color = verdict_color(verdict)
 
-                # Nettoyer la ligne verdict du corps
                 clean = re.sub(
                     r'\[?VERDICT\]?\s*[:\-]\s*(VRAI|FAUX|INCERTAIN)\s*',
                     '', analysis, flags=re.IGNORECASE,
@@ -465,7 +463,6 @@ with tab1:
                 for label in ["VRAI", "FAUX", "INCERTAIN"]:
                     clean = clean.replace(f"[{label}]", "").replace(f"[{label.lower()}]", "")
 
-                # Bandeau verdict
                 st.markdown(
                     f"""<div style="background:{color}20;border-left:6px solid {color};
                     padding:12px 18px;border-radius:8px;margin-bottom:16px;
@@ -496,7 +493,6 @@ with tab1:
                     "Croisez toujours avec les sources institutionnelles consultées ci-dessus."
                 )
 
-                # Bouton export analyse individuelle
                 export_single = (
                     f"Affirmation : {st.session_state.user_input}\n"
                     f"Verdict IA : {verdict or 'NON DÉTERMINÉ'}\n"
@@ -504,161 +500,4 @@ with tab1:
                     f"--- Analyse IA ---\n{clean.strip()}"
                 )
                 st.download_button(
-                    "📥 Télécharger cette analyse (.txt)",
-                    data=export_single.encode("utf-8"),
-                    file_name=f"analyse_emi_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                    mime="text/plain",
-                )
-
-
-# ── ONGLET 2 ─────────────────────────────────────────────────────────────────
-with tab2:
-    st.subheader("🖼️ Vérifier une Image — Méthode TRACE")
-
-    st.markdown("""
-Avant de lancer une recherche inversée, posez-vous ces **5 questions** :
-
-| Lettre | Question | Ce que vous cherchez |
-|--------|----------|----------------------|
-| **T** — Texte | Le texte associé correspond-il à ce qu'on voit réellement ? | Discordances, exagérations |
-| **R** — Référence | D'où vient cette image selon celui qui la partage ? | Source primaire vérifiable |
-| **A** — Auteur | Qui l'a prise ? Est-ce revendiqué et vérifiable ? | Profil, portfolio, crédits |
-| **C** — Contexte | Quand et où a-t-elle été prise à l'origine ? | Date EXIF, géolocalisation |
-| **E** — Émotion | Cherche-t-elle à provoquer une réaction forte ? | Peur, indignation, choc |
-""")
-
-    st.markdown("---")
-    st.markdown("#### 🔎 Recherche inversée d'image")
-    st.caption("Glissez-déposez l'image ou collez son URL dans chaque outil.")
-    c1, c2, c3, c4 = st.columns(4)
-    c1.link_button("🔍 Google Lens", "https://lens.google.com/")
-    c2.link_button("🔍 TinEye", "https://tineye.com/")
-    c3.link_button("🔍 Bing Visual", "https://www.bing.com/visualsearch/")
-    c4.link_button("🔍 InVID / WeVerify", "https://www.invid-project.eu/tools-and-services/invid-verification-plugin/")
-
-    st.markdown("---")
-    st.markdown("#### 📅 Analyser les métadonnées")
-    c1, c2, c3 = st.columns(3)
-    c1.link_button("ExifData (date/GPS)", "https://exifdata.com/")
-    c2.link_button("FotoForensics", "https://fotoforensics.com/")
-    c3.link_button("Fake Image Detector", "https://www.fakeimagedetector.com/")
-
-    st.markdown("---")
-    st.markdown("#### 🤖 Détecter une image IA générée")
-    c1, c2 = st.columns(2)
-    c1.link_button("AI or Not", "https://www.aiornot.com/")
-    c2.link_button("Hive Moderation", "https://hivemoderation.com/ai-generated-content-detection")
-
-    st.info(
-        "💡 **Rappel** : une image peut être authentique mais utilisée hors contexte. "
-        "La recherche inversée confirme l'image, pas le récit qui l'accompagne."
-    )
-
-
-# ── ONGLET 3 ─────────────────────────────────────────────────────────────────
-with tab3:
-    st.subheader("ℹ️ Méthode : Le Doute Méthodique")
-    st.markdown("""
-### Pourquoi cet outil ?
-
-Cet outil est conçu pour des **ateliers EMI** : il ne remplace pas votre jugement,
-il l'entraîne. La séquence est volontairement construite pour que vous consultiez
-les sources *avant* de voir l'analyse IA.
-
----
-
-### Les 4 principes de l'atelier
-
-**1. Formulez d'abord votre propre hypothèse**  
-Avant de cliquer sur quoi que ce soit, qu'est-ce qui vous rend méfiant(e) ?
-
-**2. Consultez les sources institutionnelles**  
-Les boutons renvoient vers des médias de référence et des institutions
-(INSEE, OMS, INSERM…). Ils fournissent le contexte légal et factuel du domaine.
-
-**3. Rédigez votre bilan avant de voir l'IA**  
-C'est l'étape la plus importante. L'IA structure le raisonnement, elle ne pense pas à votre place.
-
-**4. Comparez et discutez**  
-Là où votre bilan et l'analyse IA divergent : c'est exactement là que se trouve l'apprentissage.
-
----
-
-### Architecture technique
-
-| Composant | Rôle | Gratuit |
-|-----------|------|---------|
-| **Groq** (llama-3.3-70b) | Analyse méthodologique | ✅ 14 400 req/jour |
-| **Groq** (llama-3.1-8b) | Requêtes simples (rapide) | ✅ Idem |
-| **Tavily** | Recherche web temps réel | ✅ 1 000 req/mois |
-
-Le modèle est sélectionné automatiquement selon la complexité de l'affirmation.
-
----
-
-### Limites de l'IA
-
-- Date de coupure : l'IA ne connaît pas les événements très récents sans Tavily.
-- Elle peut se tromper sur des faits précis — la rigueur vient des **sources humaines**.
-- Les verdicts sont des **orientations**, pas des jugements définitifs.
-
----
-
-### Confidentialité
-
-- Clic-droit → navigation privée pour vos recherches.
-- DuckDuckGo, Qwant, Brave Search limitent le profilage.
-- Les affirmations ne sont **pas stockées** entre les sessions.
-""")
-
-    st.markdown("---")
-    st.markdown("### 🧠 Pour aller plus loin : Kit Esprit Critique")
-    st.caption(
-        "Cet outil se concentre sur la vérification d'une affirmation précise. "
-        "Le **Kit Esprit Critique** (Les RochDur) va plus loin : 15 applications ludiques "
-        "pour travailler les biais cognitifs, les sophismes, la hiérarchie des preuves et "
-        "la posture face à l'information — idéal en prolongement d'atelier."
-    )
-
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.markdown("**🕵️ L'Académie des détectives**")
-        st.caption("Repérer les biais cognitifs")
-        st.link_button("Lancer", "https://kit-esprit-critique.vercel.app/apps/academie-detective.html")
-    with c2:
-        st.markdown("**⚖️ Toutes les preuves ne se valent pas**")
-        st.caption("Hiérarchiser anecdote, étude, consensus…")
-        st.link_button("Lancer", "https://kit-esprit-critique.vercel.app/apps/toutes-les-preuves.html")
-    with c3:
-        st.markdown("**🎯 Logic Quest**")
-        st.caption("Débusquer les sophismes")
-        st.link_button("Lancer", "https://kit-esprit-critique.vercel.app/apps/logic-quest.html")
-
-    st.link_button(
-        "🔗 Accéder au kit complet (15 applications)",
-        "https://kit-esprit-critique.vercel.app",
-        use_container_width=True,
-    )
-
-
-# ── MODE ANIMATEUR ────────────────────────────────────────────────────────────
-if mode_animateur:
-    history = st.session_state.get("history", [])
-    st.markdown("---")
-    st.markdown("## 🎓 Vue Animateur — Toutes les analyses de la session")
-    if not history:
-        st.info("Aucune analyse effectuée pour l'instant.")
-    else:
-        for i, h in enumerate(history, 1):
-            color = verdict_color(h["verdict"])
-            with st.expander(
-                f"#{i} · {h['ts']} · **{h['verdict'] or '?'}** — {h['query'][:60]}",
-                expanded=False,
-            ):
-                st.markdown(
-                    f"<span style='color:{color};font-size:1.1rem;font-weight:700;'>"
-                    f"Verdict : {h['verdict'] or 'NON DÉTERMINÉ'}</span>",
-                    unsafe_allow_html=True,
-                )
-                st.caption(f"Domaine : {h['cat']} · Modèle : `{h['model']}`")
-                st.markdown(h["analysis"])
+                    "📥 Télécharger cette analyse (.t
