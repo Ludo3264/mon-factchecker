@@ -1,5 +1,5 @@
 """
-Outil EMI Expert — Version 4.2
+Outil EMI Expert — Version 4.3
 Mise à jour modèle : llama-3.1-8b-instant → openai/gpt-oss-20b
 """
 
@@ -75,7 +75,7 @@ SOURCES = {
 
 # Mots-clés courts → modèle léger ; questions complexes → modèle lourd
 MODEL_SIMPLE = "openai/gpt-oss-20b"
-MODEL_FULL   = "llama-3.3-70b-versatile"
+MODEL_FULL   = "openai/gpt-oss-120b"
 COMPLEXITY_THRESHOLD = 12  # nombre de mots au-delà duquel on passe au 70b
 
 
@@ -317,7 +317,7 @@ with st.sidebar:
             st.rerun()
 
     st.markdown("---")
-    st.caption("v4.2 · Groq + Tavily · EMI")
+    st.caption("v4.3 · Groq + Tavily · EMI")
 
 
 # ── Titre principal ──────────────────────────────────────────────────────────
@@ -348,7 +348,7 @@ with tab1:
         st.markdown("##### 🤖 Modèle sélectionné")
         if user_input.strip():
             m = choose_model(user_input)
-            label = "70b — Analyse complète" if m == MODEL_FULL else "GPT OSS 20B — Analyse rapide"
+            label = "GPT OSS 120B — Analyse complète" if m == MODEL_FULL else "GPT OSS 20B — Analyse rapide"
             st.info(label)
         else:
             st.caption("Saisissez une affirmation pour voir le modèle.")
@@ -584,8 +584,8 @@ Là où votre bilan et l'analyse IA divergent : c'est exactement là que se trou
 
 | Composant | Rôle | Gratuit |
 |-----------|------|---------|
-| **Groq** (GPT OSS 20B) | Analyse rapide (requêtes courtes) | ✅ 14 400 req/jour |
-| **Groq** (llama-3.3-70b) | Analyse complète (requêtes complexes) | ✅ Idem |
+| **Groq** (GPT OSS 20B) | Analyse rapide (requêtes courtes) | ✅ 1 000 req/jour |
+| **Groq** (GPT OSS 120B) | Analyse complète (requêtes complexes) | ✅ 1 000 req/jour |
 | **Tavily** | Recherche web temps réel | ✅ 1 000 req/mois |
 
 Le modèle est sélectionné automatiquement selon la complexité de l'affirmation.
