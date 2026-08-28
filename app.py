@@ -50,7 +50,7 @@ SOURCES = {
         "Le Monde Sciences": "https://www.lemonde.fr/sciences/recherche/?search_keywords=",
         "INSERM": "https://www.inserm.fr/?s=",
         "ANSES": "https://www.anses.fr/fr/search",
-        "OMS": "https://www.who.int/fr/search?q=",
+        "OMS": "https://www.who.int/fr/search/?q=",
         "Vidal (médicaments)": "https://www.vidal.fr/recherche/?q=",
     },
     "Éducation & École": {
