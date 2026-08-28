@@ -49,6 +49,7 @@ SOURCES = {
     "Santé": {
         "Le Monde Sciences": "https://www.lemonde.fr/sciences/recherche/?search_keywords=",
         "INSERM": "https://www.inserm.fr/recherche/?q=",
+        "ANSES": "https://www.anses.fr/recherche?q=",
         "OMS": "https://www.who.int/fr/search?q=",
         "Vidal (médicaments)": "https://www.vidal.fr/recherche/?q=",
     },
@@ -60,11 +61,14 @@ SOURCES = {
         "Le Monde Politique": "https://www.lemonde.fr/politique/recherche/?search_keywords=",
         "Vie Publique": "https://www.vie-publique.fr/recherche?q=",
         "Sénat": "https://www.senat.fr/recherche/index.html?query=",
+        "Légifrance": "https://www.legifrance.gouv.fr/search/all?tab_selection=all&query=",
+        "Ministère de l'Agriculture": "https://agriculture.gouv.fr/recherche?q=",
     },
     "Économie & Emploi": {
         "Le Monde Éco": "https://www.lemonde.fr/economie/recherche/?search_keywords=",
         "INSEE": "https://www.insee.fr/fr/recherche?q=",
         "Banque de France": "https://www.banque-france.fr/fr/recherche?q=",
+        "Agreste (Stats Agricoles)": "https://agreste.agriculture.gouv.fr/recherche?q=",
     },
     "International": {
         "Le Monde International": "https://www.lemonde.fr/international/recherche/?search_keywords=",
