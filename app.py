@@ -24,27 +24,27 @@ except ImportError:
 SOURCES = {
     "Fact-checking": {
         "AFP Factuel": "https://factuel.afp.com/?query=",
-        "Le Monde Décodeurs": "https://www.lemonde.fr/les-decodeurs/recherche/?search_keywords=",
-        "CheckNews (Libé)": "https://www.liberation.fr/checknews/recherche/?q=",
-        "Les Surligneurs": "https://www.lessurligneurs.eu/?s=",
+        "Le Monde Décodeurs": "https://www.lemonde.fr/les-decodeurs/",
+        "CheckNews (Libé)": "https://www.liberation.fr/checknews/",
+        "Les Surligneurs": "https://www.lessurligneurs.eu/",
     },
     "Médias, Réseaux Sociaux & Culture": {
-        "Arcom (Régulation)": "https://www.arcom.fr/recherche?q=",
-        "Le Monde Culture": "https://www.lemonde.fr/culture/recherche/?search_keywords=",
+        "Arcom (Régulation)": "https://www.arcom.fr/",
+        "Le Monde Culture": "https://www.lemonde.fr/culture/",
     },
     "Sport": {
-        "Le Monde Sport": "https://www.lemonde.fr/sport/recherche/?search_keywords=",
-        "L'Équipe": "https://www.lequipe.fr/recherche/?q=",
+        "Le Monde Sport": "https://www.lemonde.fr/sport/",
+        "L'Équipe": "https://www.lequipe.fr/",
     },
     "Environnement & Planète": {
-        "Le Monde Planète": "https://www.lemonde.fr/planete/recherche/?search_keywords=",
-        "Météo-France": "https://meteofrance.com/recherche?q=",
-        "Our World in Data": "https://ourworldindata.org/search?q=",
+        "Le Monde Planète": "https://www.lemonde.fr/planete/",
+        "Météo-France": "https://meteofrance.com/",
+        "Our World in Data": "https://ourworldindata.org/",
     },
     "Société, Laïcité & Genre": {
         "Vie Publique": "https://www.vie-publique.fr/recherche?q=",
-        "HCE (Genre/Égalité)": "https://www.haut-conseil-egalite.gouv.fr/spip.php?page=recherche&recherche=",
-        "Défenseur des Droits": "https://www.defenseurdesdroits.fr/fr/recherche?key=",
+        "HCE (Genre/Égalité)": "https://www.haut-conseil-egalite.gouv.fr/",
+        "Défenseur des Droits": "https://www.defenseurdesdroits.fr/",
     },
     "Santé": {
         "Le Monde Sciences": "https://www.lemonde.fr/sciences/",
@@ -53,29 +53,28 @@ SOURCES = {
         "Vidal (médicaments)": "https://www.vidal.fr/",
     },
     "Éducation & École": {
-        "Le Monde Éducation": "https://www.lemonde.fr/education/recherche/?search_keywords=",
-        "Ministère Éd.": "https://www.education.gouv.fr/recherche?q=",
+        "Le Monde Éducation": "https://www.lemonde.fr/education/",
+        "Ministère Éd.": "https://www.education.gouv.fr/",
     },
     "Politique & Institutions": {
-        "Le Monde Politique": "https://www.lemonde.fr/politique/recherche/?search_keywords=",
+        "Le Monde Politique": "https://www.lemonde.fr/politique/",
         "Vie Publique": "https://www.vie-publique.fr/recherche?q=",
-        "Sénat": "https://www.senat.fr/recherche/index.html?query=",
+        "Sénat": "https://www.senat.fr/",
         "Légifrance": "https://www.legifrance.gouv.fr/search/all?tab_selection=all&query=",
-        "Ministère de l'Agriculture": "https://agriculture.gouv.fr/recherche?q=",
+        "Ministère de l'Agriculture": "https://agriculture.gouv.fr/",
     },
     "Économie & Emploi": {
-        "Le Monde Éco": "https://www.lemonde.fr/economie/recherche/?search_keywords=",
-        "INSEE": "https://www.insee.fr/fr/recherche?q=",
-        "Banque de France": "https://www.banque-france.fr/fr/recherche?q=",
-        "Agreste (Stats Agricoles)": "https://agreste.agriculture.gouv.fr/recherche?q=",
+        "Le Monde Éco": "https://www.lemonde.fr/economie/",
+        "INSEE": "https://www.insee.fr/fr/accueil",
+        "Banque de France": "https://www.banque-france.fr/",
+        "Agreste (Stats Agricoles)": "https://agreste.agriculture.gouv.fr/",
     },
     "International": {
-        "Le Monde International": "https://www.lemonde.fr/international/recherche/?search_keywords=",
-        "ONU Info": "https://news.un.org/fr/search/",
-        "BBC Afrique": "https://www.bbc.com/afrique/search?q=",
+        "Le Monde International": "https://www.lemonde.fr/international/",
+        "ONU Info": "https://news.un.org/fr/",
+        "BBC Afrique": "https://www.bbc.com/afrique",
     },
 }
-
 # Mots-clés courts → modèle léger ; questions complexes → modèle lourd
 MODEL_SIMPLE = "openai/gpt-oss-20b"
 MODEL_FULL   = "openai/gpt-oss-120b"
