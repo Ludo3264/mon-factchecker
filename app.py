@@ -180,8 +180,7 @@ def get_expert_analysis(query: str, web_context: str = "", lang: str = "fr") -> 
     model = choose_model(query)
 
     lang_instruction = (
-        "Réponds en français." if lang == "fr"
-        else "Answer in English."
+        "Réponds obligatoirement en français, même si l'affirmation testée est en anglais."
     )
 
     web_block = ""
