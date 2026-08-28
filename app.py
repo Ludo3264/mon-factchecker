@@ -47,10 +47,10 @@ SOURCES = {
         "Défenseur des Droits": "https://www.defenseurdesdroits.fr/fr/recherche?key=",
     },
     "Santé": {
-        "Le Monde Sciences": "https://www.lemonde.fr/sciences/recherche/?search_keywords=",
-        "INSERM": "https://www.inserm.fr/?s=",
-        "OMS": "https://www.who.int/fr/search/?q=",
-        "Vidal (médicaments)": "https://www.vidal.fr/recherche/?q=",
+        "Le Monde Sciences": "https://www.lemonde.fr/sciences/",
+        "INSERM": "https://www.inserm.fr/",
+        "OMS": "https://www.who.int/fr/",
+        "Vidal (médicaments)": "https://www.vidal.fr/",
     },
     "Éducation & École": {
         "Le Monde Éducation": "https://www.lemonde.fr/education/recherche/?search_keywords=",
