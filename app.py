@@ -428,11 +428,11 @@ with tab1:
         cols = st.columns(len(sources_cat))
         encoded_q = st.session_state.user_input.replace(" ", "+")
         for i, (name, base_url) in enumerate(sources_cat.items()):
-        if base_url.endswith("=") or base_url.endswith("?"):
+            if base_url.endswith("=") or base_url.endswith("?"):
         link_url = f"{base_url}{encoded_q}"
-        else:
+            else:
         link_url = base_url
-        cols[i].link_button(name, link_url)
+            cols[i].link_button(name, link_url)
 
         # Moteurs vie privée
         st.markdown("---")
