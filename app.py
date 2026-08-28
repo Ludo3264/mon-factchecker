@@ -421,14 +421,18 @@ with tab1:
         # Sources institutionnelles
         st.markdown(f"### 🔗 Sources institutionnelles — *{st.session_state.cat}*")
         st.caption(
-            "ℹ️ Ces sources fournissent le **cadre légal et institutionnel** du domaine. "
-            "Pour fact-checker une affirmation précise, utilisez DuckDuckGo ou Qwant ci-dessous."
+        "ℹ️ Ces sources fournissent le **cadre légal et institutionnel** du domaine. "
+        "Pour fact-checker une affirmation précise, utilisez DuckDuckGo ou Qwant ci-dessous."
         )
         sources_cat = SOURCES[st.session_state.cat]
         cols = st.columns(len(sources_cat))
         encoded_q = st.session_state.user_input.replace(" ", "+")
         for i, (name, base_url) in enumerate(sources_cat.items()):
-            cols[i].link_button(name, f"{base_url}{encoded_q}")
+        if base_url.endswith("=") or base_url.endswith("?"):
+        link_url = f"{base_url}{encoded_q}"
+        else:
+        link_url = base_url
+        cols[i].link_button(name, link_url)
 
         # Moteurs vie privée
         st.markdown("---")
