@@ -48,8 +48,8 @@ SOURCES = {
     },
     "Santé": {
         "Le Monde Sciences": "https://www.lemonde.fr/sciences/recherche/?search_keywords=",
-        "INSERM": "https://www.inserm.fr/recherche/?q=",
-        "ANSES": "https://www.anses.fr/recherche?q=",
+        "INSERM": "https://www.inserm.fr/?s=",
+        "ANSES": "https://www.anses.fr/fr/search/site/",
         "OMS": "https://www.who.int/fr/search?q=",
         "Vidal (médicaments)": "https://www.vidal.fr/recherche/?q=",
     },
