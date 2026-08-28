@@ -47,7 +47,7 @@ SOURCES = {
         "Défenseur des Droits": "https://www.defenseurdesdroits.fr/fr/recherche?key=",
     },
     "Santé": {
-        "Le Monde Sciences": "https://www.lemonde.fr/sciences/",
+        "Le Monde Sciences": "https://www.lemonde.fr/sciences/recherche/?search_keywords=",
         "INSERM": "https://www.inserm.fr/",
         "OMS": "https://www.who.int/fr/",
         "Vidal (médicaments)": "https://www.vidal.fr/",
