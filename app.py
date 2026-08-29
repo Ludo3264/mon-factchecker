@@ -23,9 +23,9 @@ except ImportError:
 # ===========================================================================
 SOURCES = {
     "Fact-checking": {
-        "AFP Factuel": "https://factuel.afp.com/?query=",
+        "AFP Factuel": "https://factuel.afp.com/fact-checking-search-results?search_api_fulltext=",
         "Le Monde Décodeurs": "https://www.lemonde.fr/les-decodeurs/",
-        "CheckNews (Libé)": "https://www.liberation.fr/checknews/?s=",
+        "CheckNews (Libé)": "https://www.liberation.fr/checknews/",
         "Les Surligneurs": "https://www.lessurligneurs.eu/?s=",
         "Hoaxbuster": "https://www.hoaxbuster.com/search/results",
         "Les observateurs": "https://observers.france24.com/fr/tag/intox/",
