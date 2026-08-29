@@ -27,7 +27,7 @@ SOURCES = {
         "Le Monde Décodeurs": "https://www.lemonde.fr/les-decodeurs/",
         "CheckNews (Libé)": "https://www.liberation.fr/checknews/?s=",
         "Les Surligneurs": "https://www.lessurligneurs.eu/?s=",
-        "Hoaxbuster": "https://www.hoaxbuster.com/",
+        "Hoaxbuster": "https://www.hoaxbuster.com/?s=",
         "Les observateurs": "https://observers.france24.com/fr/",
         "Vrai ou faux (France info)": "https://www.franceinfo.fr/vrai-ou-fake/",
         "La vérification (Le figaro)": "https://www.lefigaro.fr/dossier/la-verification",
