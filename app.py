@@ -32,6 +32,7 @@ SOURCES = {
         "Vrai ou faux (France info)": "https://www.franceinfo.fr/vrai-ou-fake",
         "La vérification (Le figaro)": "https://www.lefigaro.fr/dossier/la-verification/",
         "Le Monde Décodeurs": "https://www.lemonde.fr/les-decodeurs/",
+        "Snopes": https://www.snopes.com/,
     },
     "Médias, Réseaux Sociaux & Culture": {
         "Arcom (Régulation)": "https://www.arcom.fr/",
