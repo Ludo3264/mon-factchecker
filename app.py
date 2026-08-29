@@ -29,8 +29,8 @@ SOURCES = {
         "Les Surligneurs": "https://www.lessurligneurs.eu/?s=",
         "Hoaxbuster": "https://www.hoaxbuster.com/?s=",
         "Les observateurs": "https://observers.france24.com/fr/",
-        "Vrai ou faux (France info)": "https://www.franceinfo.fr/vrai-ou-fake/?s=",
-        "La vérification (Le figaro)": "https://www.lefigaro.fr/dossier/la-verification/?s=",
+        "Vrai ou faux (France info)": "https://www.franceinfo.fr/vrai-ou-fake/recherche/?request=",
+        "La vérification (Le figaro)": "https://www.lefigaro.fr/dossier/la-verification/",
         "The conversation": "https://theconversation.com/fr/search?q=",
     },
     "Médias, Réseaux Sociaux & Culture": {
