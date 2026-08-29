@@ -27,6 +27,11 @@ SOURCES = {
         "Le Monde Décodeurs": "https://www.lemonde.fr/les-decodeurs/",
         "CheckNews (Libé)": "https://www.liberation.fr/checknews/",
         "Les Surligneurs": "https://www.lessurligneurs.eu/",
+        "Hoaxbuster": "https://www.hoaxbuster.com/",
+        "Les observateurs": "https://observers.france24.com/fr/",
+        "Vrai ou faux (France info)": "https://www.franceinfo.fr/vrai-ou-fake/",
+        "La vérification (Le figaro)": "https://www.lefigaro.fr/dossier/la-verification",
+        "The conversation": "https://theconversation.com/fr",
     },
     "Médias, Réseaux Sociaux & Culture": {
         "Arcom (Régulation)": "https://www.arcom.fr/",
