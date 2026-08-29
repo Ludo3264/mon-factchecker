@@ -24,14 +24,14 @@ except ImportError:
 SOURCES = {
     "Fact-checking": {
         "AFP Factuel": "https://factuel.afp.com/fact-checking-search-results?search_api_fulltext=",
-        "Le Monde Décodeurs": "https://www.lemonde.fr/les-decodeurs/",
-        "CheckNews (Libé)": "https://www.liberation.fr/checknews/",
         "Les Surligneurs": "https://www.lessurligneurs.eu/?s=",
+        "The conversation": "https://theconversation.com/fr/search?q=",
+        "CheckNews (Libé)": "https://www.liberation.fr/checknews/",
         "Hoaxbuster": "https://www.hoaxbuster.com/search/results",
         "Les observateurs": "https://observers.france24.com/fr/tag/intox/",
         "Vrai ou faux (France info)": "https://www.franceinfo.fr/vrai-ou-fake",
         "La vérification (Le figaro)": "https://www.lefigaro.fr/dossier/la-verification/",
-        "The conversation": "https://theconversation.com/fr/search?q=",
+        "Le Monde Décodeurs": "https://www.lemonde.fr/les-decodeurs/",
     },
     "Médias, Réseaux Sociaux & Culture": {
         "Arcom (Régulation)": "https://www.arcom.fr/",
