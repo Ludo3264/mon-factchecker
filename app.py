@@ -54,9 +54,9 @@ SOURCES = {
     },
     "Santé": {
         "Le Monde Sciences": "https://www.lemonde.fr/sciences/",
-        "INSERM": "https://www.inserm.fr/",
-        "OMS": "https://www.who.int/fr/",
-        "Vidal (médicaments)": "https://www.vidal.fr/",
+        "INSERM": "https://www.inserm.fr/?s=",
+        "OMS": "https://www.who.int/fr/home/search-results?indexCatalogue=genericsearchindex1&q=",
+        "Vidal (médicaments)": "https://www.vidal.fr/recherche.html?query=",
     },
     "Éducation & École": {
         "Le Monde Éducation": "https://www.lemonde.fr/education/",
